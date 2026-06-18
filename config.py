@@ -84,6 +84,17 @@ def hour_to_block(hour: int) -> int:
 # --------------------------------------------------------------------------- #
 LOCAL_TZ = "Asia/Kolkata"
 
+# Indian public holidays / major festivals within the data window (Nov-2023..
+# Apr-2024). Used as a calendar feature -- enforcement-relevant traffic patterns
+# shift on these days. Extend this set as the deployment window grows.
+HOLIDAYS = {
+    "2023-11-12", "2023-11-13", "2023-11-14", "2023-11-27",  # Diwali cluster · Guru Nanak
+    "2023-12-25",                                            # Christmas
+    "2024-01-01", "2024-01-15", "2024-01-26",                # New Year · Sankranti · Republic Day
+    "2024-03-08", "2024-03-25", "2024-03-29",                # Shivaratri · Holi · Good Friday
+    "2024-04-09",                                            # Ugadi
+}
+
 # --------------------------------------------------------------------------- #
 # Congestion-impact heuristic weights (documented assumptions)
 # --------------------------------------------------------------------------- #

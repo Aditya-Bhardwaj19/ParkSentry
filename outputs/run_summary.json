@@ -7,21 +7,21 @@
   "panel_rows": 1258434,
   "n_cells": 1389,
   "n_zones": 402,
-  "n_features_selected": 22,
-  "best_model": "RandomForest",
-  "best_RMSE": 1.4494,
+  "n_features_selected": 26,
+  "best_model": "LightGBM-Tweedie",
+  "best_RMSE": 1.4514,
   "baseline_RMSE": 1.4735,
-  "best_MAE": 0.2832,
-  "best_R2": 0.1935,
-  "capture_at_5pct": 0.5594,
-  "capture_at_1pct": 0.2842,
+  "best_MAE": 0.2697,
+  "best_R2": 0.1913,
+  "capture_at_5pct": 0.5646,
+  "capture_at_1pct": 0.292,
   "top_cell": {
     "rank": 1,
     "EPI": 100.0,
     "police_station": "Shivajinagar",
     "junction": "BTP051 - Safina Plaza Junction",
-    "pred_daily_viol": 29.638014465444297,
+    "pred_daily_viol": 26.886523738352327,
     "peak_block": "Morning Peak (08-12)"
   },
-  "runtime_sec": 88.6
+  "runtime_sec": 117.5
 }

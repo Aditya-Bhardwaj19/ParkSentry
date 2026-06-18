@@ -32,7 +32,13 @@ export default function ModelEda() {
 
   return (
     <div>
-      <h3>Model comparison</h3>
+      <div className="section-head">
+        <h3>Model comparison</h3>
+      </div>
+      <p className="hint">
+        Five challengers vs the historical-mean baseline, evaluated on a temporal
+        hold-out. Selected on RMSE + top-K capture — the metric enforcement cares about.
+      </p>
       {err && <div className="error-banner">{err}</div>}
       <div className="table-scroll">
         <table className="data-table">
@@ -55,7 +61,9 @@ export default function ModelEda() {
         </table>
       </div>
 
-      <h3>Evidence the forecast can be trusted</h3>
+      <div className="section-head" style={{ marginTop: 22 }}>
+        <h3>Evidence the forecast can be trusted</h3>
+      </div>
       <div className="plot-grid">
         {plots.map((fn) => (
           <figure key={fn} className="plot">

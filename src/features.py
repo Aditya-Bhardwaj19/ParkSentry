@@ -57,6 +57,11 @@ def add_calendar(panel: pd.DataFrame) -> pd.DataFrame:
         _cyclical(panel["dow"], 7, "dow"),
         _cyclical(panel["month"], 12, "month"),
     ], axis=1)
+    # Holiday / festival flag: enforcement & traffic patterns shift on these days.
+    panel["holiday"] = (
+        pd.to_datetime(panel["date"]).dt.strftime("%Y-%m-%d").isin(config.HOLIDAYS)
+        .astype(int)
+    )
     return panel
 
 
@@ -68,17 +73,58 @@ def add_lags(panel: pd.DataFrame) -> pd.DataFrame:
     panel["lag1"] = g.shift(1)
     panel["lag2"] = g.shift(2)
     panel["lag7"] = g.shift(7)
+    panel["lag14"] = g.shift(14)  # longer weekly memory
     # rolling means of the *past* (shift(1) first so current row is excluded)
     panel["roll7_mean"] = g.transform(lambda s: s.shift(1).rolling(7, min_periods=1).mean())
+    panel["roll14_mean"] = g.transform(lambda s: s.shift(1).rolling(14, min_periods=1).mean())
     panel["roll28_mean"] = g.transform(lambda s: s.shift(1).rolling(28, min_periods=1).mean())
+    # EWMA: a smoother, recency-weighted memory than a flat rolling window.
+    panel["ewm7"] = g.transform(lambda s: s.shift(1).ewm(span=7, min_periods=1).mean())
 
     # cell-level recent activity across ALL blocks (broader context)
     gc = panel.sort_values(["cell", "date", "time_block"]).groupby("cell")[TARGET]
     panel["cell_roll_day"] = gc.transform(lambda s: s.shift(1).rolling(6, min_periods=1).mean())
 
-    lag_cols = ["lag1", "lag2", "lag7", "roll7_mean", "roll28_mean", "cell_roll_day"]
+    lag_cols = ["lag1", "lag2", "lag7", "lag14", "roll7_mean", "roll14_mean",
+                "roll28_mean", "ewm7", "cell_roll_day"]
     panel[lag_cols] = panel[lag_cols].fillna(0.0)  # no history -> no recent activity
     return panel
+
+
+def add_spatial(panel: pd.DataFrame) -> pd.DataFrame:
+    """8-connected grid-neighbour features (spatial autocorrelation).
+
+    Crime/hotspot forecasting shows enforcement pressure clusters spatially, so a
+    cell's neighbourhood is predictive on top of its own history. We add:
+      * nbr_roll7    -- mean recent (7-day) activity of the 8 neighbouring cells
+                        (DYNAMIC; rebuilt from neighbour history at inference).
+      * nbr_blk_mean -- mean train-only historical intensity of the 8 neighbours
+                        for this block (STATIC prior).
+    Both are leak-safe: nbr_roll7 is built from causal roll7_mean, nbr_blk_mean
+    from the train-only cell_blk_mean. Cells absent from the panel (sub-threshold)
+    are simply not counted, exactly as at inference.
+    """
+    panel = panel.copy()
+    rc = panel["cell"].str.split("_", expand=True).astype(int)
+    panel["_r"], panel["_c"] = rc[0], rc[1]
+    lut = (panel[["_r", "_c", "date", "time_block", "roll7_mean", "cell_blk_mean"]]
+           .set_index(["_r", "_c", "date", "time_block"])[["roll7_mean", "cell_blk_mean"]])
+
+    roll_sum = np.zeros(len(panel)); blk_sum = np.zeros(len(panel)); cnt = np.zeros(len(panel))
+    offsets = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+    for dr, dc in offsets:
+        idx = pd.MultiIndex.from_arrays(
+            [panel["_r"] + dr, panel["_c"] + dc, panel["date"], panel["time_block"]])
+        got = lut.reindex(idx)
+        rr = got["roll7_mean"].to_numpy()
+        bb = got["cell_blk_mean"].to_numpy()
+        present = ~np.isnan(rr)
+        roll_sum += np.where(present, np.nan_to_num(rr), 0.0)
+        blk_sum += np.where(present, np.nan_to_num(bb), 0.0)
+        cnt += present.astype(float)
+    panel["nbr_roll7"] = roll_sum / np.maximum(cnt, 1)
+    panel["nbr_blk_mean"] = blk_sum / np.maximum(cnt, 1)
+    return panel.drop(columns=["_r", "_c"])
 
 
 def add_cell_priors(panel: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
@@ -158,12 +204,13 @@ def add_categorical_encoding(panel: pd.DataFrame, cell_meta: pd.DataFrame) -> tu
 # Canonical model feature list (order matters for inference reproducibility).
 FEATURE_COLUMNS = [
     # calendar / cyclical
-    "time_block", "dow", "is_weekend", "month", "day", "peak_w",
+    "time_block", "dow", "is_weekend", "month", "day", "peak_w", "holiday",
     "block_sin", "block_cos", "dow_sin", "dow_cos", "month_sin", "month_cos",
-    # spatial
-    "cell_lat", "cell_lon",
+    # spatial (cell + neighbourhood)
+    "cell_lat", "cell_lon", "nbr_roll7", "nbr_blk_mean",
     # autoregressive lags
-    "lag1", "lag2", "lag7", "roll7_mean", "roll28_mean", "cell_roll_day",
+    "lag1", "lag2", "lag7", "lag14", "roll7_mean", "roll14_mean", "roll28_mean",
+    "ewm7", "cell_roll_day",
     # cell-static priors / encodings
     "cell_blk_mean", "cell_blk_nonzero", "cell_sev", "cell_veh", "cell_jshare",
     "ps_target_enc", "log_total_events",
@@ -187,6 +234,7 @@ def build_features(panel: pd.DataFrame, cell_meta: pd.DataFrame,
     )
     panel, e1 = add_cell_priors(panel)
     panel, e2 = add_categorical_encoding(panel, cell_meta)
+    panel = add_spatial(panel)  # needs roll7_mean (lags) + cell_blk_mean (priors)
 
     encoders = {**e1, **e2}
     log(f"built {len(FEATURE_COLUMNS)} features")

@@ -26,16 +26,19 @@
 ## 2. Headline results (temporal hold-out: train Nov 2023–Feb 2024, test Mar–Apr 2024)
 
 - **248,357** clean parking events → **1,389** enforcement cells → **1.26 M** cell-date-block panel rows.
-- **Best model: RandomForest** (squared-error regressor) — RMSE **1.450** vs analyst baseline **1.474**, R² **0.19**, MAE **0.283**. Selected on **RMSE + top-K capture** (the operational metric), where it narrowly leads the Poisson-objective boosters (HistGB/XGB/LightGBM, all within ~0.003 capture@5%). *Disclosure:* on Poisson deviance the **Poisson-GLM** is best; we report all five challengers in `artifacts/model_comparison.csv` and select on the metric enforcement actually cares about.
-- **Enforcement efficiency:** patrolling the **top 5 %** of predicted cell-time slots captures **~56 %** of all violations; the **top 1 %** captures **~28 %** (≈ 28× better than random).
+- **Best model: LightGBM-Tweedie** — a gradient booster with a **Tweedie objective** (purpose-built for zero-inflated counts), iterations chosen by **early stopping** on a temporal inner-validation slice. RMSE **1.451** vs analyst baseline **1.474**, R² **0.19**, MAE **0.270**. **Selected on the operational metric** (top-K capture first, RMSE as tie-break) since scarce patrols care about *what share of violations we catch*, not squared error. We report all six challengers (baseline, Poisson-GLM, RandomForest, HistGB/XGB/LightGBM-Poisson, LightGBM-Tweedie) in `artifacts/model_comparison.csv`.
+- **Enforcement efficiency:** patrolling the **top 5 %** of predicted cell-time slots captures **~56.5 %** of all violations; the **top 1 %** captures **~29.2 %** (≈ 29× better than random) — both improved over the prior RandomForest (55.9 % / 28.4 %) via Tweedie loss + spatial-neighbour & EWMA features.
 - **#1 priority cell:** Shivajinagar / Safina Plaza Junction — ~30 violations/day, **Morning Peak (08–12)**.
 - Operational insight: violations concentrate heavily in **morning/daytime local hours** (enforcement-shift pattern) and a handful of commercial cores (Shivajinagar, KR/City Market, Upparpet, HAL Old Airport).
 
 > **Honest framing:** the historical per-cell average is already a strong
-> predictor, so the ML lift over the baseline is real but modest in RMSE. The
-> model's value is the **smooth, generalizable risk surface**, the ability to
-> **forecast unseen future slots**, and the **capture-curve efficiency** that
-> directly translates into patrol routing.
+> predictor, so the ML lift over the baseline is real but modest in RMSE
+> (1.451 vs 1.474). The bigger, decision-relevant gains are on the **operational
+> capture metric** — Tweedie loss plus spatial-neighbour and EWMA memory features
+> lift top-1 % capture from 28.4 % → 29.2 % over the prior RandomForest, at ~1/24
+> the model size. The model's value is the **smooth, generalizable risk surface**,
+> the ability to **forecast unseen future slots**, and that **capture-curve
+> efficiency** that directly translates into patrol routing.
 
 ---
 
@@ -51,11 +54,13 @@
    │
    ▼  src/aggregate.py     (cell × date × 4h-block) panel, zero-filled  → 1.26M rows
    │
-   ▼  src/features.py      calendar/cyclical + causal lags + LEAK-SAFE cell priors & target encoding (27 feats)
+   ▼  src/features.py      calendar/cyclical + causal lags (incl. EWMA) + SPATIAL-neighbour
+   │                       signal + LEAK-SAFE cell priors & target encoding (33 feats)
    │
-   ▼  src/feature_selection.py   variance · |r|>0.95 redundancy · MI/Pearson signal  → 22 feats
+   ▼  src/feature_selection.py   variance · |r|>0.95 redundancy · MI/Pearson signal  → 26 feats
    │
-   ▼  src/model.py         baseline vs GLM/RF/HistGB/XGB/LGBM · temporal split · Poisson + capture metrics
+   ▼  src/model.py         baseline vs GLM/RF/HistGB/XGB/LGBM-Poisson/LGBM-Tweedie ·
+   │                       temporal split · early stopping · Poisson + capture metrics
    │
    ▼  src/hotspots.py      per-CELL Enforcement Priority Index (primary) + DBSCAN zones (secondary)
    │
@@ -134,10 +139,15 @@ automatically; `MAPPLS_MAP_SDK_KEY` is an optional fallback. See
   (historical means, target encoding, cell priors) is fit on **train only**;
   lag features are causally shifted. A random split would inflate scores.
 - **Right loss for the data.** The target is a zero-inflated **count**, so the
-  gradient-boosters and the GLM use a **Poisson** objective (the GLM wins on
-  Poisson deviance). The shipped RandomForest optimizes squared error and is
-  selected because it leads on RMSE and the operational top-K capture metric —
-  a choice we state openly rather than retrofitting the loss narrative onto it.
+  shipped **LightGBM-Tweedie** uses a **Tweedie objective** — purpose-built for
+  zero-inflated, overdispersed counts and a documented improvement over Poisson
+  on this data shape. The Poisson boosters and the GLM are kept as challengers;
+  selection is on the **operational top-K capture metric** (RMSE as tie-break).
+- **Spatial signal.** Enforcement pressure clusters spatially (hotspot/PAI
+  research), so the features include **8-neighbour** recent activity (`nbr_roll7`)
+  and historical intensity (`nbr_blk_mean`), rebuilt causally and leak-safe — they
+  are top contributors to the capture lift. EWMA (`ewm7`) adds recency-weighted
+  memory on top of flat rolling windows.
 - **Operational metric, not just statistical.** The **top-K capture curve**
   measures what enforcement actually cares about: with scarce patrols, how much
   of the violation volume do we catch?

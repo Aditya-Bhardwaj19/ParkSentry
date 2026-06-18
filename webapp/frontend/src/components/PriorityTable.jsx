@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Icon } from './icons.jsx';
 import { getHotspots, getZones } from '../api.js';
 
 const COLS = [
@@ -53,11 +54,17 @@ export default function PriorityTable() {
 
   return (
     <div>
-      <h3>Enforcement Priority Index — ranked cells (primary targeting)</h3>
+      <div className="section-head">
+        <h3>Enforcement Priority Index — ranked cells</h3>
+        <button className="primary-btn" onClick={download} disabled={!cells.length}>
+          <Icon name="download" size={16} /> Download CSV
+        </button>
+      </div>
+      <p className="hint">
+        Primary targeting unit. {cells.length} cells ranked by EPI — the smooth,
+        forecast-driven priority score that decides where the next patrol goes.
+      </p>
       {err && <div className="error-banner">{err}</div>}
-      <button className="primary-btn" onClick={download} disabled={!cells.length}>
-        ⬇ Download ranking (CSV)
-      </button>
       <div className="table-scroll">
         <table className="data-table">
           <thead>
@@ -70,7 +77,12 @@ export default function PriorityTable() {
           <tbody>
             {cells.map((c) => (
               <tr key={c.rank}>
-                {COLS.map(([k]) => (
+                <td>
+                  <span className={`rank-badge ${c.rank <= 3 ? 'top' : ''}`}>
+                    {c.rank}
+                  </span>
+                </td>
+                {COLS.slice(1).map(([k]) => (
                   <td key={k}>{fmt(c[k])}</td>
                 ))}
               </tr>
@@ -87,8 +99,7 @@ export default function PriorityTable() {
           <table className="data-table">
             <thead>
               <tr>
-                {zones[0] &&
-                  Object.keys(zones[0]).map((k) => <th key={k}>{k}</th>)}
+                {zones[0] && Object.keys(zones[0]).map((k) => <th key={k}>{k}</th>)}
               </tr>
             </thead>
             <tbody>

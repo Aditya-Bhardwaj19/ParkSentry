@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import MapView from './MapView.jsx';
+import { Icon } from './icons.jsx';
 import { getBlocks, getForecast } from '../api.js';
 
 export default function Forecaster() {
@@ -39,18 +40,21 @@ export default function Forecaster() {
 
   return (
     <div>
-      <h3>Forecast parking-violation risk for any zone / time</h3>
+      <div className="section-head">
+        <h3>Forecast parking-violation risk for any zone / time</h3>
+      </div>
       <p className="hint">
         Rebuilds the model's features causally and scores every known cell on
-        demand (Python FastAPI + the deployable Forecaster).
+        demand (Python FastAPI + the deployable Forecaster). First run loads the
+        model, so it can take a few seconds.
       </p>
 
-      <div className="forecast-controls">
-        <label>
+      <div className="panel forecast-controls">
+        <label className="field">
           Date
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </label>
-        <label>
+        <label className="field">
           Time block
           <select value={block} onChange={(e) => setBlock(Number(e.target.value))}>
             {Object.entries(blocks).map(([idx, label]) => (
@@ -60,8 +64,8 @@ export default function Forecaster() {
             ))}
           </select>
         </label>
-        <label>
-          Top cells: <strong>{top}</strong>
+        <label className="field">
+          Top cells: <span style={{ color: 'var(--brand)', fontSize: 14 }}>{top}</span>
           <input
             type="range"
             min="5"
@@ -71,11 +75,19 @@ export default function Forecaster() {
           />
         </label>
         <button className="primary-btn" onClick={run} disabled={loading}>
+          <Icon name="bolt" size={16} />
           {loading ? 'Scoring…' : 'Run forecast'}
         </button>
       </div>
 
       {err && <div className="error-banner">{err}</div>}
+
+      {!result && !err && (
+        <div className="empty-hint">
+          Pick a date and time block, then run a forecast to see the busiest
+          predicted cells on the map.
+        </div>
+      )}
 
       {result && (
         <div className="forecast-result">
@@ -92,9 +104,13 @@ export default function Forecaster() {
               <tbody>
                 {result.cells.map((c, i) => (
                   <tr key={c.cell}>
-                    <td>{i + 1}</td>
+                    <td>
+                      <span className={`rank-badge ${i === 0 ? 'top' : ''}`}>
+                        {i + 1}
+                      </span>
+                    </td>
                     <td>{(c.pred_viol || 0).toFixed(3)}</td>
-                    <td>{c.cell}</td>
+                    <td className="mono">{c.cell}</td>
                     <td>{c.police_station}</td>
                   </tr>
                 ))}

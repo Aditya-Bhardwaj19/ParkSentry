@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import MapView from './MapView.jsx';
+import { Icon } from './icons.jsx';
 import { getBlocks, getStations, getHotspots } from '../api.js';
 
 export default function PriorityMap() {
@@ -7,6 +8,7 @@ export default function PriorityMap() {
   const [stations, setStations] = useState([]);
   const [selBlocks, setSelBlocks] = useState(null); // null = all
   const [selStations, setSelStations] = useState([]);
+  const [stationQuery, setStationQuery] = useState('');
   const [topN, setTopN] = useState(100);
   const [cells, setCells] = useState([]);
   const [err, setErr] = useState(null);
@@ -15,7 +17,7 @@ export default function PriorityMap() {
     getBlocks()
       .then((b) => {
         setBlocks(b);
-        setSelBlocks(Object.values(b)); // default: all blocks
+        setSelBlocks(Object.values(b));
       })
       .catch((e) => setErr(e.message));
     getStations().then(setStations).catch(() => {});
@@ -48,6 +50,14 @@ export default function PriorityMap() {
     [cells]
   );
 
+  const visibleStations = useMemo(
+    () =>
+      stations.filter((s) =>
+        s.toLowerCase().includes(stationQuery.trim().toLowerCase())
+      ),
+    [stations, stationQuery]
+  );
+
   const toggleBlock = (label) => {
     setSelBlocks((prev) => {
       const cur = prev || Object.values(blocks);
@@ -58,14 +68,17 @@ export default function PriorityMap() {
   return (
     <div>
       <p className="hint">
-        Each dot is a ~150 m enforcement cell (a specific road stretch), sized &
-        coloured by its Enforcement Priority Index (EPI).
+        Each dot is a ~150&nbsp;m enforcement cell (a specific road stretch), sized
+        &amp; coloured by its Enforcement Priority Index (EPI). Click a dot for its
+        rank, station and predicted volume.
       </p>
       {err && <div className="error-banner">{err}</div>}
       <div className="map-layout">
-        <aside className="controls">
-          <label className="control">
-            Show top-N cells: <strong>{topN}</strong>
+        <aside className="panel controls">
+          <div className="control">
+            <div className="control-title">
+              Top-N cells <span className="val">{topN}</span>
+            </div>
             <input
               type="range"
               min="10"
@@ -74,7 +87,7 @@ export default function PriorityMap() {
               value={topN}
               onChange={(e) => setTopN(Number(e.target.value))}
             />
-          </label>
+          </div>
 
           <div className="control">
             <div className="control-title">Peak time block</div>
@@ -91,26 +104,47 @@ export default function PriorityMap() {
           </div>
 
           <div className="control">
-            <div className="control-title">Police station</div>
+            <div className="control-title">
+              Police station
+              {selStations.length > 0 && (
+                <span className="val">{selStations.length}</span>
+              )}
+            </div>
+            <input
+              className="station-search"
+              type="text"
+              placeholder="Filter stations…"
+              value={stationQuery}
+              onChange={(e) => setStationQuery(e.target.value)}
+            />
             <select
               multiple
-              size="8"
+              size="7"
               value={selStations}
               onChange={(e) =>
                 setSelStations(Array.from(e.target.selectedOptions, (o) => o.value))
               }
             >
-              {stations.map((s) => (
+              {visibleStations.map((s) => (
                 <option key={s} value={s}>
                   {s}
                 </option>
               ))}
             </select>
-            {selStations.length > 0 && (
-              <button className="link-btn" onClick={() => setSelStations([])}>
-                clear stations
-              </button>
-            )}
+            <div className="control-meta">
+              <span>{visibleStations.length} stations</span>
+              {selStations.length > 0 && (
+                <button className="link-btn" onClick={() => setSelStations([])}>
+                  clear
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="control-meta" style={{ marginTop: 4 }}>
+            <span>
+              <Icon name="pin" size={12} /> {cells.length} cells shown
+            </span>
           </div>
         </aside>
 

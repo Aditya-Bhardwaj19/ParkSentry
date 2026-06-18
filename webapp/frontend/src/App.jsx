@@ -5,12 +5,13 @@ import PriorityMap from './components/PriorityMap.jsx';
 import PriorityTable from './components/PriorityTable.jsx';
 import Forecaster from './components/Forecaster.jsx';
 import ModelEda from './components/ModelEda.jsx';
+import { Icon } from './components/icons.jsx';
 
 const TABS = [
-  { id: 'map', label: '🗺️ Priority Map', el: <PriorityMap /> },
-  { id: 'table', label: '📋 Priority List', el: <PriorityTable /> },
-  { id: 'forecast', label: '🔮 Live Forecaster', el: <Forecaster /> },
-  { id: 'model', label: '📈 Model & EDA', el: <ModelEda /> },
+  { id: 'map', label: 'Priority Map', icon: 'map', el: <PriorityMap /> },
+  { id: 'table', label: 'Priority List', icon: 'list', el: <PriorityTable /> },
+  { id: 'forecast', label: 'Live Forecaster', icon: 'bolt', el: <Forecaster /> },
+  { id: 'model', label: 'Model & EDA', icon: 'chart', el: <ModelEda /> },
 ];
 
 export default function App() {
@@ -24,20 +25,38 @@ export default function App() {
       .catch((e) => setErr(e.message));
   }, []);
 
+  const range = summary?.date_range;
   return (
     <div className="app">
       <header className="app-header">
-        <h1>🚦 ParkSentry — Parking-Induced Congestion Intelligence</h1>
-        <p className="subtitle">
-          Theme 1 · Detect illegal-parking hotspots, quantify congestion impact,
-          and target enforcement. Data: Bengaluru police parking violations.
-        </p>
+        <div className="brand-mark">🚦</div>
+        <div className="brand-text">
+          <h1>
+            Park<span className="accent">Sentry</span>
+            <span style={{ WebkitTextFillColor: 'var(--text-2)', fontWeight: 600 }}>
+              {' '}
+              — Parking-Induced Congestion Intelligence
+            </span>
+          </h1>
+          <p className="subtitle">
+            Detect illegal-parking hotspots · quantify congestion impact · target
+            enforcement. Data: Bengaluru police parking violations.
+          </p>
+        </div>
+        <div className={`status-pill`} title={err ? err : 'Data service connected'}>
+          <span className={`status-dot ${err ? 'off' : ''}`} />
+          {err
+            ? 'Service offline'
+            : range
+            ? `Live · ${range[0]} → ${range[1]}`
+            : 'Connecting…'}
+        </div>
       </header>
 
       {err && (
         <div className="error-banner">
-          Could not reach the data service: {err}. Is the FastAPI service running
-          on :8000 and the gateway on :3000?
+          Could not reach the data service: {err}. Is FastAPI running on :8000 and
+          the gateway on :3000?
         </div>
       )}
 
@@ -50,12 +69,20 @@ export default function App() {
             className={`tab ${tab === t.id ? 'active' : ''}`}
             onClick={() => setTab(t.id)}
           >
-            {t.label}
+            <Icon name={t.icon} /> {t.label}
           </button>
         ))}
       </nav>
 
-      <main className="tab-body">{TABS.find((t) => t.id === tab).el}</main>
+      <main className="tab-body" key={tab}>
+        {TABS.find((t) => t.id === tab).el}
+      </main>
+
+      <footer className="app-footer">
+        <span>
+          🚦 ParkSentry · React + Node/Express + FastAPI · Mappls maps
+        </span>
+      </footer>
     </div>
   );
 }
