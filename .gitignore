@@ -1,0 +1,28 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.env.*
+.ipynb_checkpoints/
+
+# --- Node / web ---
+node_modules/
+webapp/*/node_modules/
+webapp/frontend/dist/
+npm-debug.log*
+.vite/
+
+# --- Intermediate pipeline cache (regenerable by pipeline.py) ---
+data/
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# NOTE: outputs/ and artifacts/ ARE committed so the web app is demoable from a
+# fresh clone (the raw source CSV lives outside the repo and is not published).

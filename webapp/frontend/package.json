@@ -1,0 +1,21 @@
+{
+  "name": "violationproto-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "React + Vite SPA for ViolationProto, rendering Mappls maps over the FastAPI data service.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "violationproto-webapp": "file:.."
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.8"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "violationproto-gateway",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Node/Express gateway: mints Mappls map token and proxies /api to the Python FastAPI service.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "http-proxy-middleware": "^3.0.0",
+    "violationproto-webapp": "file:.."
+  }
+}

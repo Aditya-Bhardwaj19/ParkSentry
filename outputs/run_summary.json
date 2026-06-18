@@ -1,0 +1,27 @@
+{
+  "events_clean": 248357,
+  "date_range": [
+    "2023-11-10",
+    "2024-04-08"
+  ],
+  "panel_rows": 1258434,
+  "n_cells": 1389,
+  "n_zones": 402,
+  "n_features_selected": 22,
+  "best_model": "RandomForest",
+  "best_RMSE": 1.4494,
+  "baseline_RMSE": 1.4735,
+  "best_MAE": 0.2832,
+  "best_R2": 0.1935,
+  "capture_at_5pct": 0.5594,
+  "capture_at_1pct": 0.2842,
+  "top_cell": {
+    "rank": 1,
+    "EPI": 100.0,
+    "police_station": "Shivajinagar",
+    "junction": "BTP051 - Safina Plaza Junction",
+    "pred_daily_viol": 29.638014465444297,
+    "peak_block": "Morning Peak (08-12)"
+  },
+  "runtime_sec": 88.6
+}

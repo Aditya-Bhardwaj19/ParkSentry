@@ -1,0 +1,18 @@
+{
+  "name": "violationproto-webapp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Full-stack ViolationProto: React (Vite) + Node/Express gateway + Python FastAPI ML service.",
+  "scripts": {
+    "dev:api": "python -m uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload",
+    "dev:gateway": "node --watch gateway/server.js",
+    "dev:web": "npm --prefix frontend run dev",
+    "dev": "concurrently -k -n api,gateway,web -c green,cyan,magenta \"npm:dev:api\" \"npm:dev:gateway\" \"npm:dev:web\"",
+    "build": "npm --prefix frontend run build",
+    "start:prod": "concurrently -k -n api,gateway -c green,cyan \"npm:dev:api\" \"npm:dev:gateway\"",
+    "install:all": "npm install && npm --prefix gateway install && npm --prefix frontend install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
