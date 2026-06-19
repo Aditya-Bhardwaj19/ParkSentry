@@ -33,6 +33,7 @@ function EpiLegend() {
 export default function MapView({ points = [], height = 560, zoom = 11 }) {
   const elRef = useRef(null);
   const mapRef = useRef(null);
+  const mapIdRef = useRef(`mappls-map-${Math.random().toString(36).slice(2)}`);
   const markersRef = useRef([]);
   const [error, setError] = useState(null);
   const [ready, setReady] = useState(false);
@@ -45,7 +46,7 @@ export default function MapView({ points = [], height = 560, zoom = 11 }) {
         const center = points.length
           ? [avg(points, 'lat'), avg(points, 'lon')]
           : [12.9716, 77.5946];
-        mapRef.current = new M.Map(elRef.current, {
+        mapRef.current = new M.Map(mapIdRef.current, {
           center,
           zoom,
           zoomControl: true,
@@ -127,7 +128,12 @@ export default function MapView({ points = [], height = 560, zoom = 11 }) {
 
   return (
     <div className="map-wrap">
-      <div ref={elRef} className="mapview" style={{ height }} />
+      <div
+        ref={elRef}
+        id={mapIdRef.current}
+        className="mapview"
+        style={{ height }}
+      />
       {!ready && (
         <div className="map-loading">
           <div className="spinner" />

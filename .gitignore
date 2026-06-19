@@ -26,3 +26,4 @@ Thumbs.db
 
 # NOTE: outputs/ and artifacts/ ARE committed so the web app is demoable from a
 # fresh clone (the raw source CSV lives outside the repo and is not published).
+repomix-output.xml
