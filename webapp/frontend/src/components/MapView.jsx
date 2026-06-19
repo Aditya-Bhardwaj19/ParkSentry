@@ -34,6 +34,7 @@ export default function MapView({ points = [], height = 560, zoom = 11 }) {
   const elRef = useRef(null);
   const mapIdRef = useRef(`mappls-map-${Math.random().toString(36).slice(2)}`);
   const mapRef = useRef(null);
+  const mapIdRef = useRef(`mappls-map-${Math.random().toString(36).slice(2)}`);
   const markersRef = useRef([]);
   const [error, setError] = useState(null);
   const [ready, setReady] = useState(false);
