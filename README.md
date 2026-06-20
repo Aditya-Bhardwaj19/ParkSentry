@@ -167,5 +167,5 @@ automatically; `MAPPLS_MAP_SDK_KEY` is an optional fallback. See
 - **Impact score is a proxy**, not measured delay. Structure is sound; constants
   need field calibration.
 - Data covers Nov 2023–Apr 2024 (the file is named "Jan–May"); the pipeline is
-  date-agnostic and will use whatever range the CSV contains.
+  date-agnostic and will use whatever range the CSV contains
 ```
