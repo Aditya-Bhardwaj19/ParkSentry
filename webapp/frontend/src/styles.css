@@ -1,23 +1,23 @@
 /* ============================ Design tokens ============================ */
 :root {
-  /* Surfaces — cool slate, warm data accents */
-  --bg: #090c12;
-  --surface: #121823;
-  --surface-2: #182030;
-  --surface-3: #20293a;
-  --border: #26314380;
-  --border-strong: #36425a;
+  /* Surfaces — charcoal-green base, fresh signal accents */
+  --bg: #07110c;
+  --surface: #0f1a14;
+  --surface-2: #16241c;
+  --surface-3: #1f2f25;
+  --border: #2a3f3380;
+  --border-strong: #38543f;
 
   /* Text */
-  --text: #eaf0f8;
-  --text-2: #a7b4c6;
-  --text-3: #6c7a90;
+  --text: #e9f6ef;
+  --text-2: #a6c4b4;
+  --text-3: #6c8f7d;
 
-  /* Brand (traffic-light amber→orange) + semantics */
-  --brand: #f59e0b;
-  --brand-2: #f97316;
-  --brand-grad: linear-gradient(135deg, #f9b234 0%, #f97316 100%);
-  --accent: #fbbf24;
+  /* Brand (signal emerald→lime "clear roads") + semantics */
+  --brand: #10b981;
+  --brand-2: #84cc16;
+  --brand-grad: linear-gradient(135deg, #10b981 0%, #84cc16 100%);
+  --accent: #4ade80;
   --success: #34d399;
   --danger: #f87171;
 
@@ -30,7 +30,7 @@
   --radius-sm: 9px;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
   --shadow-lg: 0 12px 40px -12px rgba(0, 0, 0, 0.7);
-  --ring: 0 0 0 3px rgba(245, 158, 11, 0.28);
+  --ring: 0 0 0 3px rgba(16, 185, 129, 0.30);
 }
 
 * {
@@ -46,8 +46,8 @@ body {
   font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
   color: var(--text);
   background:
-    radial-gradient(1100px 520px at 78% -8%, rgba(249, 115, 22, 0.1), transparent 60%),
-    radial-gradient(900px 480px at 0% 0%, rgba(56, 109, 180, 0.08), transparent 55%),
+    radial-gradient(1100px 520px at 78% -8%, rgba(16, 185, 129, 0.10), transparent 60%),
+    radial-gradient(900px 480px at 0% 0%, rgba(132, 204, 22, 0.07), transparent 55%),
     var(--bg);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
@@ -59,7 +59,7 @@ code,
 }
 
 ::selection {
-  background: rgba(245, 158, 11, 0.32);
+  background: rgba(16, 185, 129, 0.32);
 }
 
 /* Scrollbars */
@@ -117,7 +117,7 @@ code,
   font-size: 26px;
   border-radius: 14px;
   background: var(--brand-grad);
-  box-shadow: 0 8px 20px -8px rgba(249, 115, 22, 0.7);
+  box-shadow: 0 8px 20px -8px rgba(16, 185, 129, 0.55);
 }
 .brand-text {
   flex: 1;
@@ -219,7 +219,7 @@ code,
   display: grid;
   place-items: center;
   border-radius: 11px;
-  background: rgba(245, 158, 11, 0.12);
+  background: rgba(16, 185, 129, 0.12);
   color: var(--brand);
 }
 .kpi-icon svg {
@@ -294,7 +294,7 @@ code,
 .tab.active {
   color: #fff;
   background: var(--brand-grad);
-  box-shadow: 0 6px 16px -8px rgba(249, 115, 22, 0.8);
+  box-shadow: 0 6px 16px -8px rgba(16, 185, 129, 0.60);
 }
 
 .tab-body {
@@ -472,6 +472,69 @@ select[multiple] option {
   background: var(--surface);
 }
 
+/* Map popup — restyle the Mappls/MapLibre/Leaflet container for the dark theme
+   so click-popups read clearly over the light basemap. */
+.mapboxgl-popup-content,
+.maplibregl-popup-content,
+.leaflet-popup-content-wrapper,
+.mappls-popup-content {
+  background: var(--surface-2) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: 10px !important;
+  box-shadow: var(--shadow-lg) !important;
+  padding: 0 !important;
+}
+.leaflet-popup-content {
+  margin: 0 !important;
+  background: transparent !important;
+}
+/* Pointer tip (CSS triangle) — colour the side that faces the bubble. */
+.mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
+.maplibregl-popup-anchor-top .maplibregl-popup-tip {
+  border-bottom-color: var(--surface-2) !important;
+}
+.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+  border-top-color: var(--surface-2) !important;
+}
+.mapboxgl-popup-anchor-left .mapboxgl-popup-tip,
+.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: var(--surface-2) !important;
+}
+.mapboxgl-popup-anchor-right .mapboxgl-popup-tip,
+.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: var(--surface-2) !important;
+}
+.leaflet-popup-tip {
+  background: var(--surface-2) !important;
+  border: 1px solid var(--border-strong) !important;
+  box-shadow: none !important;
+}
+.mapboxgl-popup-close-button,
+.maplibregl-popup-close-button,
+.leaflet-popup-close-button {
+  color: var(--text-2) !important;
+  font-size: 16px !important;
+  padding: 2px 6px !important;
+}
+.mapboxgl-popup-close-button:hover,
+.maplibregl-popup-close-button:hover,
+.leaflet-popup-close-button:hover {
+  color: var(--text) !important;
+  background: transparent !important;
+}
+.map-popup-card {
+  padding: 9px 12px;
+  min-width: 165px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text);
+}
+.map-popup-card b {
+  color: var(--accent);
+}
+
 /* EPI legend overlay */
 .epi-legend {
   position: absolute;
@@ -511,7 +574,7 @@ select[multiple] option {
   border-radius: var(--radius);
   border: 1px solid var(--border);
   background:
-    radial-gradient(600px 300px at 50% 30%, rgba(245, 158, 11, 0.06), transparent 70%),
+    radial-gradient(600px 300px at 50% 30%, rgba(16, 185, 129, 0.06), transparent 70%),
     var(--surface);
   display: grid;
   place-items: center;
@@ -528,9 +591,9 @@ select[multiple] option {
   display: grid;
   place-items: center;
   border-radius: 16px;
-  background: rgba(245, 158, 11, 0.12);
+  background: rgba(16, 185, 129, 0.12);
   color: var(--brand);
-  border: 1px solid rgba(245, 158, 11, 0.25);
+  border: 1px solid rgba(16, 185, 129, 0.25);
 }
 .map-state .glyph svg {
   width: 28px;
@@ -559,7 +622,7 @@ select[multiple] option {
   line-height: 1.7;
 }
 .map-state code {
-  background: rgba(245, 158, 11, 0.12);
+  background: rgba(16, 185, 129, 0.12);
   color: var(--accent);
   padding: 1px 6px;
   border-radius: 5px;
@@ -644,7 +707,7 @@ select[multiple] option {
   background: #ffffff04;
 }
 .data-table tbody tr:hover {
-  background: rgba(245, 158, 11, 0.07);
+  background: rgba(16, 185, 129, 0.07);
 }
 .data-table td:first-child {
   font-weight: 600;
@@ -749,12 +812,12 @@ select[multiple] option {
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  box-shadow: 0 6px 16px -8px rgba(249, 115, 22, 0.8);
+  box-shadow: 0 6px 16px -8px rgba(16, 185, 129, 0.60);
   transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 .primary-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 10px 22px -8px rgba(249, 115, 22, 0.9);
+  box-shadow: 0 10px 22px -8px rgba(16, 185, 129, 0.70);
 }
 .primary-btn:disabled {
   opacity: 0.5;

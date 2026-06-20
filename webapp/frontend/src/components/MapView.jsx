@@ -12,6 +12,10 @@ function epiColor(epi) {
 
 const avg = (arr, k) => arr.reduce((s, x) => s + x[k], 0) / arr.length;
 
+// Wrap popup HTML in a dark-theme card so the content stays legible over the
+// light Mappls basemap (the SDK's default popup inherits no background).
+const popupCard = (html) => `<div class="map-popup-card">${html || ''}</div>`;
+
 function EpiLegend() {
   return (
     <div className="epi-legend">
@@ -89,7 +93,7 @@ export default function MapView({ points = [], height = 560, zoom = 11 }) {
           position: { lat: p.lat, lng: p.lon },
           fitbounds: false,
           html,
-          popupHtml: p.popup,
+          popupHtml: popupCard(p.popup),
         });
         markersRef.current.push(mk);
       } catch (_) {
