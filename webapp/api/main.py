@@ -19,6 +19,8 @@ Run:
 """
 from __future__ import annotations
 
+import csv
+import io
 import json
 import os
 import sys
@@ -26,8 +28,8 @@ import threading
 
 import numpy as np
 import pandas as pd
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse
+from fastapi import Body, FastAPI, HTTPException, Query
+from fastapi.responses import FileResponse, StreamingResponse
 
 # --------------------------------------------------------------------------- #
 # Make the existing ViolationProto Python package importable.
@@ -104,6 +106,31 @@ def _require_outputs():
 
 
 # --------------------------------------------------------------------------- #
+# Station assignments (server-side, persisted) -- which station owns each cell.
+# Stored as {cell: station} in a gitignored JSON; survives restarts.
+# --------------------------------------------------------------------------- #
+_ASSIGN_PATH = os.path.join(config.DATA_DIR, "station_assignments.json")
+_assign_lock = threading.Lock()
+
+
+def _assignments() -> dict:
+    if "assign" not in _cache:
+        try:
+            with open(_ASSIGN_PATH, encoding="utf-8") as f:
+                _cache["assign"] = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            _cache["assign"] = {}
+    return _cache["assign"]
+
+
+def _save_assignments(d: dict) -> None:
+    tmp = _ASSIGN_PATH + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(d, f, indent=2, ensure_ascii=False)
+    os.replace(tmp, _ASSIGN_PATH)  # atomic
+
+
+# --------------------------------------------------------------------------- #
 # Endpoints
 # --------------------------------------------------------------------------- #
 @app.get("/api/health")
@@ -145,6 +172,62 @@ def station_geo():
         {"station": r["dom_police_station"], "lat": float(r["lat"]),
          "lon": float(r["lon"]), "cells": int(r["cells"])}
         for _, r in g.iterrows()]}
+
+
+@app.get("/api/assignments")
+def get_assignments():
+    """All saved cell -> station assignments."""
+    return {"assignments": _assignments()}
+
+
+@app.post("/api/assignments")
+def set_assignment(payload: dict = Body(...)):
+    """Persist (or clear) a single cell's assigned station."""
+    cell = str(payload.get("cell", "")).strip()
+    station = payload.get("station")
+    if not cell:
+        raise HTTPException(status_code=400, detail="cell is required")
+    with _assign_lock:
+        d = _assignments()
+        if station in (None, "", "__clear__"):
+            d.pop(cell, None)
+        else:
+            d[cell] = str(station)
+        _save_assignments(d)
+    return {"cell": cell, "station": d.get(cell), "count": len(d)}
+
+
+@app.get("/api/assignments/export")
+def export_assignments():
+    """Download the assignments as a CSV (joined with cell rank/EPI/junction)."""
+    _require_outputs()
+    d = _assignments()
+    by_cell = {str(r["cell"]): r for _, r in _hotspots().iterrows()}
+
+    def _rank_of(cell):
+        r = by_cell.get(str(cell))
+        try:
+            return int(r["rank"])
+        except Exception:
+            return 10 ** 9
+
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(["cell", "rank", "EPI", "dominant_station", "assigned_station", "junction"])
+    for cell, station in sorted(d.items(), key=lambda kv: _rank_of(kv[0])):
+        r = by_cell.get(str(cell))
+        w.writerow([
+            cell,
+            int(r["rank"]) if r is not None else "",
+            r["EPI"] if r is not None else "",
+            r["dom_police_station"] if r is not None else "",
+            station,
+            r["dom_junction"] if r is not None else "",
+        ])
+    return StreamingResponse(
+        io.BytesIO(buf.getvalue().encode("utf-8")),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=station_assignments.csv"})
 
 
 @app.get("/api/hotspots")

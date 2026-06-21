@@ -31,3 +31,15 @@ export const plotUrl = (name) => `/api/plots/${name}`;
 export const getStationGeo = () => getJSON('/api/station-geo');
 export const getRoute = (from, to) =>
   getJSON(`/api/route?slat=${from.lat}&slng=${from.lon}&dlat=${to.lat}&dlng=${to.lon}`);
+
+export const getAssignments = () => getJSON('/api/assignments');
+export const saveAssignment = (cell, station) =>
+  fetch('/api/assignments', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ cell, station }),
+  }).then((r) => {
+    if (!r.ok) throw new Error('save failed');
+    return r.json();
+  });
+export const assignmentsExportUrl = '/api/assignments/export';

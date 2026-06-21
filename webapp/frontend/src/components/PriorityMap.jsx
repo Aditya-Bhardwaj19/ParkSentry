@@ -1,7 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import MapView from './MapView.jsx';
 import { Icon } from './icons.jsx';
-import { getBlocks, getStations, getHotspots, getStationGeo, getRoute } from '../api.js';
+import {
+  getBlocks,
+  getStations,
+  getHotspots,
+  getStationGeo,
+  getRoute,
+  getAssignments,
+  saveAssignment,
+  assignmentsExportUrl,
+} from '../api.js';
 import { useT } from '../i18n/index.jsx';
 
 const escapeHtml = (s) =>
@@ -25,6 +34,7 @@ export default function PriorityMap() {
   // the chosen route is drawn on the map.
   const [stationGeo, setStationGeo] = useState([]); // [{station, lat, lon, cells}]
   const [route, setRoute] = useState(null); // {path, from, distance, duration}
+  const [assignments, setAssignments] = useState({}); // {cell: station} (persisted)
 
   useEffect(() => {
     getBlocks()
@@ -35,6 +45,7 @@ export default function PriorityMap() {
       .catch((e) => setErr(e.message));
     getStations().then(setStations).catch(() => {});
     getStationGeo().then((d) => setStationGeo(d.stations)).catch(() => {});
+    getAssignments().then((d) => setAssignments(d.assignments || {})).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -100,18 +111,45 @@ export default function PriorityMap() {
   const doRouteRef = useRef(doRoute);
   doRouteRef.current = doRoute;
 
-  // One delegated listener catches "Show route" clicks in any popup, regardless
-  // of how the Mappls SDK renders the popup DOM (robust vs inline handlers).
+  // Persist the assignment (server-side) when the popup dropdown changes.
+  const onAssign = (cellId, station) => {
+    setAssignments((prev) => ({ ...prev, [cellId]: station }));
+    setRoute(null); // station changed -> drop any stale route
+    const out = document.getElementById('psS-' + cellId);
+    if (out) out.textContent = ' …';
+    saveAssignment(cellId, station)
+      .then(() => {
+        const el = document.getElementById('psS-' + cellId);
+        if (el) el.textContent = ' ' + t('map.saved');
+      })
+      .catch(() => {
+        const el = document.getElementById('psR-' + cellId);
+        if (el) el.textContent = t('map.saveErr');
+      });
+  };
+  const onAssignRef = useRef(onAssign);
+  onAssignRef.current = onAssign;
+
+  // Delegated listeners catch "Show route" clicks and dropdown changes in any
+  // popup, regardless of how the Mappls SDK renders the popup DOM.
   useEffect(() => {
-    const handler = (e) => {
+    const onClick = (e) => {
       const btn = e.target && e.target.closest && e.target.closest('[data-psroute]');
       if (btn) {
         e.preventDefault();
         doRouteRef.current(btn.getAttribute('data-psroute'));
       }
     };
-    document.addEventListener('click', handler);
-    return () => document.removeEventListener('click', handler);
+    const onChange = (e) => {
+      const sel = e.target && e.target.closest && e.target.closest('[data-psassign]');
+      if (sel) onAssignRef.current(sel.getAttribute('data-psassign'), sel.value);
+    };
+    document.addEventListener('click', onClick);
+    document.addEventListener('change', onChange);
+    return () => {
+      document.removeEventListener('click', onClick);
+      document.removeEventListener('change', onChange);
+    };
   }, []);
 
   const stationOptions = (selected) =>
@@ -129,17 +167,20 @@ export default function PriorityMap() {
           `<b>${t('map.popup.rank', { rank: c.rank })}</b> &nbsp;EPI ${c.EPI}<br/>` +
           `${escapeHtml(c.dom_police_station || '')} — ${escapeHtml(c.dom_junction || '')}<br/>` +
           `${t('map.popup.perDay', { n: (c.pred_daily_viol || 0).toFixed(1) })} · ${tBlock(c.peak_block_label)}`;
+        const assigned = assignments[c.cell]; // saved choice, if any
+        const dflt = assigned || c.dom_police_station;
         const assign = stationGeo.length
           ? '<div class="ps-assign">' +
-            `<label>${escapeHtml(t('map.assignTo'))}</label>` +
-            `<select id="psA-${c.cell}" data-psassign="${c.cell}">${stationOptions(c.dom_police_station)}</select>` +
+            `<label>${escapeHtml(t('map.assignTo'))}` +
+            `<span class="ps-saved" id="psS-${c.cell}">${assigned ? ' ✓' : ''}</span></label>` +
+            `<select id="psA-${c.cell}" data-psassign="${c.cell}">${stationOptions(dflt)}</select>` +
             `<button class="ps-route-btn" data-psroute="${c.cell}">${escapeHtml(t('map.showRoute'))}</button>` +
             `<div class="ps-route-out" id="psR-${c.cell}"></div>` +
             '</div>'
           : '';
         return { id: c.cell, lat: c.lat, lon: c.lon, epi: c.EPI, popup: info + assign };
       }),
-    [cells, stationGeo, t, tBlock]
+    [cells, stationGeo, assignments, t, tBlock]
   );
 
   const visibleStations = useMemo(
@@ -242,6 +283,20 @@ export default function PriorityMap() {
                 <button className="link-btn" onClick={() => setRoute(null)}>
                   {t('map.clearRoute')}
                 </button>
+              </div>
+            </div>
+          )}
+
+          {Object.keys(assignments).length > 0 && (
+            <div className="control assign-card">
+              <div className="control-title">{t('map.assignmentsTitle')}</div>
+              <div className="route-info">
+                <span>
+                  {t('map.assignmentsCount', { count: Object.keys(assignments).length })}
+                </span>
+                <a className="link-btn" href={assignmentsExportUrl} download>
+                  {t('map.exportCsv')}
+                </a>
               </div>
             </div>
           )}

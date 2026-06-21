@@ -676,6 +676,10 @@ select[multiple] option {
   color: var(--accent);
   min-height: 1px;
 }
+.map-popup-card .ps-saved {
+  color: var(--success);
+  font-weight: 700;
+}
 
 /* EPI legend overlay */
 .epi-legend {
