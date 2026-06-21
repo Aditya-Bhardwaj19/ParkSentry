@@ -153,8 +153,8 @@ if (fs.existsSync(dist)) {
   app.get('*', (_req, res) => res.sendFile(path.join(dist, 'index.html')));
 }
 
-app.listen(PORT, () => {
-  console.log(`[gateway] listening on http://localhost:${PORT}  ->  API ${API_URL}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`[gateway] listening on 0.0.0.0:${PORT}  ->  API ${API_URL}`);
   const mode = process.env.MAPPLS_CLIENT_ID
     ? 'OAuth (client_id/secret)'
     : process.env.MAPPLS_MAP_SDK_KEY
