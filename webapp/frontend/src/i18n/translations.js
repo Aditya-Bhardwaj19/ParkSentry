@@ -19,10 +19,6 @@ export const STRINGS = {
     'header.suffix': '— Parking-Induced Congestion Intelligence',
     'header.subtitle':
       'Detect illegal-parking hotspots · quantify congestion impact · target enforcement. Data: Bengaluru police parking violations.',
-    'header.live': 'Live · {start} → {end}',
-    'header.connecting': 'Connecting…',
-    'header.offline': 'Service offline',
-    'header.connected': 'Data service connected',
     'header.errorBanner':
       'Could not reach the data service: {err}. Is the gateway running on :8000 and FastAPI on :8001?',
     'footer.text': 'ParkSentry · React + Node/Express + FastAPI · Mappls maps',
@@ -135,10 +131,6 @@ export const STRINGS = {
     'header.suffix': '— पार्किंग-जनित भीड़भाड़ इंटेलिजेंस',
     'header.subtitle':
       'अवैध पार्किंग के हॉटस्पॉट पहचानें · भीड़भाड़ प्रभाव मापें · प्रवर्तन लक्षित करें। डेटा: बेंगलुरु पुलिस पार्किंग उल्लंघन।',
-    'header.live': 'लाइव · {start} → {end}',
-    'header.connecting': 'कनेक्ट हो रहा है…',
-    'header.offline': 'सेवा ऑफ़लाइन',
-    'header.connected': 'डेटा सेवा कनेक्टेड',
     'header.errorBanner':
       'डेटा सेवा तक नहीं पहुँच सका: {err}। क्या गेटवे :8000 पर और FastAPI :8001 पर चल रहा है?',
     'footer.text': 'ParkSentry · React + Node/Express + FastAPI · Mappls मानचित्र',
@@ -251,10 +243,6 @@ export const STRINGS = {
     'header.suffix': '— ಪಾರ್ಕಿಂಗ್-ಪ್ರೇರಿತ ದಟ್ಟಣೆ ಇಂಟೆಲಿಜೆನ್ಸ್',
     'header.subtitle':
       'ಅಕ್ರಮ ಪಾರ್ಕಿಂಗ್ ಹಾಟ್‌ಸ್ಪಾಟ್‌ಗಳನ್ನು ಪತ್ತೆ ಮಾಡಿ · ದಟ್ಟಣೆ ಪರಿಣಾಮವನ್ನು ಅಳೆಯಿರಿ · ಜಾರಿಯನ್ನು ಗುರಿಯಾಗಿಸಿ. ಡೇಟಾ: ಬೆಂಗಳೂರು ಪೊಲೀಸ್ ಪಾರ್ಕಿಂಗ್ ಉಲ್ಲಂಘನೆಗಳು.',
-    'header.live': 'ಲೈವ್ · {start} → {end}',
-    'header.connecting': 'ಸಂಪರ್ಕಿಸಲಾಗುತ್ತಿದೆ…',
-    'header.offline': 'ಸೇವೆ ಆಫ್‌ಲೈನ್',
-    'header.connected': 'ಡೇಟಾ ಸೇವೆ ಸಂಪರ್ಕಗೊಂಡಿದೆ',
     'header.errorBanner':
       'ಡೇಟಾ ಸೇವೆಯನ್ನು ತಲುಪಲಾಗಲಿಲ್ಲ: {err}. ಗೇಟ್‌ವೇ :8000 ನಲ್ಲಿ ಮತ್ತು FastAPI :8001 ನಲ್ಲಿ ಚಾಲನೆಯಲ್ಲಿದೆಯೇ?',
     'footer.text': 'ParkSentry · React + Node/Express + FastAPI · Mappls ನಕ್ಷೆಗಳು',

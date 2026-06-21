@@ -28,7 +28,6 @@ export default function App() {
       .catch((e) => setErr(e.message));
   }, []);
 
-  const range = summary?.date_range;
   return (
     <div className="app">
       <header className="app-header">
@@ -45,14 +44,6 @@ export default function App() {
         </div>
         <div className="header-tools">
           <LanguageSwitcher />
-          <div className="status-pill" title={err ? err : t('header.connected')}>
-            <span className={`status-dot ${err ? 'off' : ''}`} />
-            {err
-              ? t('header.offline')
-              : range
-              ? t('header.live', { start: range[0], end: range[1] })
-              : t('header.connecting')}
-          </div>
         </div>
       </header>
 
