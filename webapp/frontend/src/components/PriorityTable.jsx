@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Icon } from './icons.jsx';
 import { getHotspots, getZones } from '../api.js';
+import { useT } from '../i18n/index.jsx';
 
 const COLS = [
-  ['rank', 'Rank'],
-  ['EPI', 'EPI'],
-  ['pred_daily_viol', 'Pred/day'],
-  ['actual_daily_viol', 'Actual/day'],
-  ['mean_impact_per_viol', 'Impact/viol'],
-  ['total_events', 'Events'],
-  ['peak_block_label', 'Peak block'],
-  ['dom_police_station', 'Police station'],
-  ['dom_junction', 'Junction'],
+  ['rank', 'table.col.rank'],
+  ['EPI', 'table.col.epi'],
+  ['pred_daily_viol', 'table.col.predDay'],
+  ['actual_daily_viol', 'table.col.actualDay'],
+  ['mean_impact_per_viol', 'table.col.impactViol'],
+  ['total_events', 'table.col.events'],
+  ['peak_block_label', 'table.col.peakBlock'],
+  ['dom_police_station', 'table.col.policeStation'],
+  ['dom_junction', 'table.col.junction'],
 ];
 
 const fmt = (v) =>
@@ -28,6 +29,7 @@ function toCsv(rows) {
 }
 
 export default function PriorityTable() {
+  const { t, tBlock } = useT();
   const [cells, setCells] = useState([]);
   const [zones, setZones] = useState([]);
   const [showZones, setShowZones] = useState(false);
@@ -55,22 +57,19 @@ export default function PriorityTable() {
   return (
     <div>
       <div className="section-head">
-        <h3>Enforcement Priority Index — ranked cells</h3>
+        <h3>{t('table.title')}</h3>
         <button className="primary-btn" onClick={download} disabled={!cells.length}>
-          <Icon name="download" size={16} /> Download CSV
+          <Icon name="download" size={16} /> {t('table.downloadCsv')}
         </button>
       </div>
-      <p className="hint">
-        Primary targeting unit. {cells.length} cells ranked by EPI — the smooth,
-        forecast-driven priority score that decides where the next patrol goes.
-      </p>
+      <p className="hint">{t('table.hint', { count: cells.length })}</p>
       {err && <div className="error-banner">{err}</div>}
       <div className="table-scroll">
         <table className="data-table">
           <thead>
             <tr>
-              {COLS.map(([, label]) => (
-                <th key={label}>{label}</th>
+              {COLS.map(([k, labelKey]) => (
+                <th key={k}>{t(labelKey)}</th>
               ))}
             </tr>
           </thead>
@@ -83,7 +82,9 @@ export default function PriorityTable() {
                   </span>
                 </td>
                 {COLS.slice(1).map(([k]) => (
-                  <td key={k}>{fmt(c[k])}</td>
+                  <td key={k}>
+                    {fmt(k === 'peak_block_label' ? tBlock(c[k]) : c[k])}
+                  </td>
                 ))}
               </tr>
             ))}
@@ -92,7 +93,7 @@ export default function PriorityTable() {
       </div>
 
       <button className="link-btn" onClick={() => setShowZones((s) => !s)}>
-        {showZones ? '▾' : '▸'} Secondary: DBSCAN density zones (beat-level grouping)
+        {showZones ? '▾' : '▸'} {t('table.zonesToggle')}
       </button>
       {showZones && (
         <div className="table-scroll">

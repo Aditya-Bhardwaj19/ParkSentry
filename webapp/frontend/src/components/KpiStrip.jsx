@@ -1,6 +1,8 @@
 import { Icon } from './icons.jsx';
+import { useT } from '../i18n/index.jsx';
 
 export default function KpiStrip({ summary }) {
+  const { t } = useT();
   const pct = (x) => `${Math.round((x || 0) * 100)}%`;
 
   const items = summary
@@ -8,29 +10,32 @@ export default function KpiStrip({ summary }) {
         {
           icon: 'alert',
           value: (summary.events_clean || 0).toLocaleString(),
-          label: 'Clean violations',
+          label: t('kpi.cleanViolations'),
         },
         {
           icon: 'pin',
           value: `${(summary.n_cells || 0).toLocaleString()} / ${(summary.n_zones || 0).toLocaleString()}`,
-          label: 'Priority cells / zones',
+          label: t('kpi.priorityCellsZones'),
         },
         {
           icon: 'cpu',
           value: summary.best_model,
-          label: 'Best model',
-          hint: `RMSE ${summary.best_RMSE} vs baseline ${summary.baseline_RMSE}`,
+          label: t('kpi.bestModel'),
+          hint: t('kpi.bestModelHint', {
+            rmse: summary.best_RMSE,
+            baseline: summary.baseline_RMSE,
+          }),
         },
         {
           icon: 'target',
           value: pct(summary.capture_at_5pct),
-          label: 'Top-5% capture',
-          hint: 'Share of all violations caught by patrolling the top 5% predicted slots',
+          label: t('kpi.capture5'),
+          hint: t('kpi.capture5Hint'),
         },
         {
           icon: 'target',
           value: pct(summary.capture_at_1pct),
-          label: 'Top-1% capture',
+          label: t('kpi.capture1'),
         },
       ]
     : null;
@@ -44,7 +49,7 @@ export default function KpiStrip({ summary }) {
             <div className="kpi-icon" />
             <div className="kpi-body">
               <div className="kpi-value">000,000</div>
-              <div className="kpi-label">loading…</div>
+              <div className="kpi-label">{t('kpi.loading')}</div>
             </div>
           </div>
         ))}

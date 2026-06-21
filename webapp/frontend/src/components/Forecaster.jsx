@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import MapView from './MapView.jsx';
 import { Icon } from './icons.jsx';
 import { getBlocks, getForecast } from '../api.js';
+import { useT } from '../i18n/index.jsx';
 
 export default function Forecaster() {
+  const { t, tBlock } = useT();
   const [blocks, setBlocks] = useState({});
   const [date, setDate] = useState('2024-04-10');
   const [block, setBlock] = useState(2);
@@ -34,38 +36,36 @@ export default function Forecaster() {
       epi: (c.pred_viol / mx) * 100,
       popup:
         `<b>#${i + 1}</b> &nbsp;${c.police_station || ''}<br/>` +
-        `cell ${c.cell}<br/>~${(c.pred_viol || 0).toFixed(2)} viol · ${result.block_label}`,
+        `${t('forecast.popup.cell', { cell: c.cell })}<br/>` +
+        `${t('forecast.popup.viol', { n: (c.pred_viol || 0).toFixed(2) })} · ${tBlock(result.block_label)}`,
     }));
-  }, [result]);
+  }, [result, t, tBlock]);
 
   return (
     <div>
       <div className="section-head">
-        <h3>Forecast parking-violation risk for any zone / time</h3>
+        <h3>{t('forecast.title')}</h3>
       </div>
-      <p className="hint">
-        Rebuilds the model's features causally and scores every known cell on
-        demand (Python FastAPI + the deployable Forecaster). First run loads the
-        model, so it can take a few seconds.
-      </p>
+      <p className="hint">{t('forecast.hint')}</p>
 
       <div className="panel forecast-controls">
         <label className="field">
-          Date
+          {t('forecast.date')}
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </label>
         <label className="field">
-          Time block
+          {t('forecast.timeBlock')}
           <select value={block} onChange={(e) => setBlock(Number(e.target.value))}>
             {Object.entries(blocks).map(([idx, label]) => (
               <option key={idx} value={idx}>
-                {label}
+                {tBlock(label)}
               </option>
             ))}
           </select>
         </label>
         <label className="field">
-          Top cells: <span style={{ color: 'var(--brand)', fontSize: 14 }}>{top}</span>
+          {t('forecast.topCells')}{' '}
+          <span style={{ color: 'var(--brand)', fontSize: 14 }}>{top}</span>
           <input
             type="range"
             min="5"
@@ -76,17 +76,14 @@ export default function Forecaster() {
         </label>
         <button className="primary-btn" onClick={run} disabled={loading}>
           <Icon name="bolt" size={16} />
-          {loading ? 'Scoring…' : 'Run forecast'}
+          {loading ? t('forecast.scoring') : t('forecast.run')}
         </button>
       </div>
 
       {err && <div className="error-banner">{err}</div>}
 
       {!result && !err && (
-        <div className="empty-hint">
-          Pick a date and time block, then run a forecast to see the busiest
-          predicted cells on the map.
-        </div>
+        <div className="empty-hint">{t('forecast.empty')}</div>
       )}
 
       {result && (
@@ -95,10 +92,10 @@ export default function Forecaster() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>Pred viol</th>
-                  <th>Cell</th>
-                  <th>Police station</th>
+                  <th>{t('forecast.colNum')}</th>
+                  <th>{t('forecast.colPred')}</th>
+                  <th>{t('forecast.colCell')}</th>
+                  <th>{t('forecast.colStation')}</th>
                 </tr>
               </thead>
               <tbody>

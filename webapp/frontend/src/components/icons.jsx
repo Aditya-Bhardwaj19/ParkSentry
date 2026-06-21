@@ -72,6 +72,13 @@ const PATHS = {
       <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </>
   ),
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <path d="M12 3a14 14 0 0 0 0 18 14 14 0 0 0 0-18Z" />
+    </>
+  ),
 };
 
 export function Icon({ name, size = 16, ...rest }) {

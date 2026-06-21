@@ -5,16 +5,19 @@ import PriorityMap from './components/PriorityMap.jsx';
 import PriorityTable from './components/PriorityTable.jsx';
 import Forecaster from './components/Forecaster.jsx';
 import ModelEda from './components/ModelEda.jsx';
+import LanguageSwitcher from './components/LanguageSwitcher.jsx';
 import { Icon } from './components/icons.jsx';
+import { useT } from './i18n/index.jsx';
 
 const TABS = [
-  { id: 'map', label: 'Priority Map', icon: 'map', el: <PriorityMap /> },
-  { id: 'table', label: 'Priority List', icon: 'list', el: <PriorityTable /> },
-  { id: 'forecast', label: 'Live Forecaster', icon: 'bolt', el: <Forecaster /> },
-  { id: 'model', label: 'Model & EDA', icon: 'chart', el: <ModelEda /> },
+  { id: 'map', labelKey: 'tabs.map', icon: 'map', el: <PriorityMap /> },
+  { id: 'table', labelKey: 'tabs.table', icon: 'list', el: <PriorityTable /> },
+  { id: 'forecast', labelKey: 'tabs.forecast', icon: 'bolt', el: <Forecaster /> },
+  { id: 'model', labelKey: 'tabs.model', icon: 'chart', el: <ModelEda /> },
 ];
 
 export default function App() {
+  const { t } = useT();
   const [summary, setSummary] = useState(null);
   const [err, setErr] = useState(null);
   const [tab, setTab] = useState('map');
@@ -35,53 +38,48 @@ export default function App() {
             Park<span className="accent">Sentry</span>
             <span style={{ WebkitTextFillColor: 'var(--text-2)', fontWeight: 600 }}>
               {' '}
-              — Parking-Induced Congestion Intelligence
+              {t('header.suffix')}
             </span>
           </h1>
-          <p className="subtitle">
-            Detect illegal-parking hotspots · quantify congestion impact · target
-            enforcement. Data: Bengaluru police parking violations.
-          </p>
+          <p className="subtitle">{t('header.subtitle')}</p>
         </div>
-        <div className={`status-pill`} title={err ? err : 'Data service connected'}>
-          <span className={`status-dot ${err ? 'off' : ''}`} />
-          {err
-            ? 'Service offline'
-            : range
-            ? `Live · ${range[0]} → ${range[1]}`
-            : 'Connecting…'}
+        <div className="header-tools">
+          <LanguageSwitcher />
+          <div className="status-pill" title={err ? err : t('header.connected')}>
+            <span className={`status-dot ${err ? 'off' : ''}`} />
+            {err
+              ? t('header.offline')
+              : range
+              ? t('header.live', { start: range[0], end: range[1] })
+              : t('header.connecting')}
+          </div>
         </div>
       </header>
 
       {err && (
-        <div className="error-banner">
-          Could not reach the data service: {err}. Is FastAPI running on :8000 and
-          the gateway on :3000?
-        </div>
+        <div className="error-banner">{t('header.errorBanner', { err })}</div>
       )}
 
       <KpiStrip summary={summary} />
 
       <nav className="tabs">
-        {TABS.map((t) => (
+        {TABS.map((tb) => (
           <button
-            key={t.id}
-            className={`tab ${tab === t.id ? 'active' : ''}`}
-            onClick={() => setTab(t.id)}
+            key={tb.id}
+            className={`tab ${tab === tb.id ? 'active' : ''}`}
+            onClick={() => setTab(tb.id)}
           >
-            <Icon name={t.icon} /> {t.label}
+            <Icon name={tb.icon} /> {t(tb.labelKey)}
           </button>
         ))}
       </nav>
 
       <main className="tab-body" key={tab}>
-        {TABS.find((t) => t.id === tab).el}
+        {TABS.find((tb) => tb.id === tab).el}
       </main>
 
       <footer className="app-footer">
-        <span>
-          🚦 ParkSentry · React + Node/Express + FastAPI · Mappls maps
-        </span>
+        <span>🚦 {t('footer.text')}</span>
       </footer>
     </div>
   );

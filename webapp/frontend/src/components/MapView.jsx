@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { loadMappls, mapplsGlobal } from '../mappls.js';
 import { Icon } from './icons.jsx';
+import { useT } from '../i18n/index.jsx';
 
 // Yellow (low EPI) -> deep red (high EPI).
 function epiColor(epi) {
@@ -17,13 +18,14 @@ const avg = (arr, k) => arr.reduce((s, x) => s + x[k], 0) / arr.length;
 const popupCard = (html) => `<div class="map-popup-card">${html || ''}</div>`;
 
 function EpiLegend() {
+  const { t } = useT();
   return (
     <div className="epi-legend">
-      <div className="legend-title">Enforcement Priority Index</div>
+      <div className="legend-title">{t('mapview.legendTitle')}</div>
       <div className="epi-bar" />
       <div className="epi-scale">
-        <span>Low</span>
-        <span>High</span>
+        <span>{t('mapview.low')}</span>
+        <span>{t('mapview.high')}</span>
       </div>
     </div>
   );
@@ -41,6 +43,7 @@ export default function MapView({ points = [], height = 560, zoom = 11 }) {
   const markersRef = useRef([]);
   const [error, setError] = useState(null);
   const [ready, setReady] = useState(false);
+  const { t } = useT();
 
   useEffect(() => {
     let cancelled = false;
@@ -111,19 +114,14 @@ export default function MapView({ points = [], height = 560, zoom = 11 }) {
           <div className="glyph">
             <Icon name="key" size={28} />
           </div>
-          <h3>{notConfigured ? 'Maps need a Mappls key' : 'Map could not load'}</h3>
-          <p>
-            {notConfigured
-              ? 'The data, rankings, forecaster and charts all work without a key — only the interactive map needs Mappls credentials.'
-              : error}
-          </p>
+          <h3>{notConfigured ? t('mapview.needKey') : t('mapview.couldNotLoad')}</h3>
+          <p>{notConfigured ? t('mapview.needKeyBody') : error}</p>
           <div className="steps">
-            1. Create an app at <code>apps.mappls.com</code> and copy the keys.
+            1. {t('mapview.step1')}
             <br />
-            2. Set <code>MAPPLS_CLIENT_ID</code> + <code>MAPPLS_CLIENT_SECRET</code>{' '}
-            (or <code>MAPPLS_MAP_SDK_KEY</code>) in the gateway environment.
+            2. {t('mapview.step2')}
             <br />
-            3. Ensure the Map SDK is enabled in the console, then reload.
+            3. {t('mapview.step3')}
           </div>
         </div>
       </div>
@@ -141,7 +139,7 @@ export default function MapView({ points = [], height = 560, zoom = 11 }) {
       {!ready && (
         <div className="map-loading">
           <div className="spinner" />
-          Loading map…
+          {t('mapview.loading')}
         </div>
       )}
       {ready && points.length > 0 && <EpiLegend />}
