@@ -2,7 +2,7 @@
 End-to-end orchestration for ViolationProto (Theme 1).
 
 Runs the full chain and persists every artifact the inference module and the
-Streamlit dashboard need:
+web app (webapp/) need:
 
     ingest -> impact -> aggregate -> features -> feature-selection
            -> model -> score -> hotspots/EPI -> visualize -> save

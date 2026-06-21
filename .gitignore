@@ -6,6 +6,7 @@ __pycache__/
 venv/
 .env
 .env.*
+!.env.example
 .ipynb_checkpoints/
 
 # --- Node / web ---
@@ -27,3 +28,13 @@ Thumbs.db
 # NOTE: outputs/ and artifacts/ ARE committed so the web app is demoable from a
 # fresh clone (the raw source CSV lives outside the repo and is not published).
 repomix-output.xml
+
+# Experiment result tables written by experiments/*.py — regenerable, and the
+# findings are summarised in docs/MODELS.md / docs/FEATURE_ENGINEERING.md.
+artifacts/feature_ablation.csv
+artifacts/improve_all.csv
+artifacts/nn_preprocessing.csv
+artifacts/q90_encoder.csv
+artifacts/deep_vs_tree*
+artifacts/stacking_seed*.json
+artifacts/blend_fulltrain_seed*.json

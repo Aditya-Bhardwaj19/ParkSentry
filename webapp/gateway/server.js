@@ -21,8 +21,8 @@ const fs = require('fs');
 const express = require('express');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
-const PORT = process.env.PORT || 3000;
-const API_URL = process.env.API_URL || 'http://127.0.0.1:8000';
+const PORT = process.env.PORT || 8000;
+const API_URL = process.env.API_URL || 'http://127.0.0.1:8001';
 const OAUTH_URL = 'https://outpost.mappls.com/api/security/oauth/token';
 
 const app = express();

@@ -22,5 +22,6 @@ seaborn>=0.12
 fastapi>=0.110
 uvicorn>=0.29
 
-# Legacy Streamlit prototype (superseded by webapp/; kept optional, not used).
-# streamlit>=1.30
+# Optional: the deep-learning experiments (experiments/deep_models.py,
+# nn_preprocessing.py, ...) need PyTorch. Not required for the pipeline or app.
+# torch>=2.0

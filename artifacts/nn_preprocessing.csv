@@ -1,3 +1,0 @@
-model,MAE,RMSE,R2,PoissonDev,capture@1%,oracle@1%,capture@5%,oracle@5%,capture@10%,oracle@10%,capture@20%,oracle@20%
-MLP+rankgauss,0.28157,1.46145,0.18013,0.9391,0.27945,0.63176,0.55784,1.0,0.6772,1.0,0.79786,1.0
-MLP+rankgauss+emb,0.27908,1.4904,0.14733,0.9209,0.2692,0.63176,0.55134,1.0,0.6786,1.0,0.8072,1.0

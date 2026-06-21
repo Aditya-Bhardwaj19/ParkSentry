@@ -4,15 +4,14 @@
   "private": true,
   "description": "Full-stack ViolationProto: React (Vite) + Node/Express gateway + Python FastAPI ML service.",
   "scripts": {
-    "prod:api": "python -m uvicorn api.main:app --host 0.0.0.0 --port 8000",
-    "prod:gateway": "node gateway/server.js",
-    "start": "concurrently -k -n api,gateway \"npm:prod:api\" \"npm:prod:gateway\"",
-    "dev:api": "python -m uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload",
-    "dev:gateway": "node --watch gateway/server.js",
+    "prod:api": "python -m uvicorn api.main:app --host 127.0.0.1 --port 8001",
+    "prod:gateway": "node --env-file-if-exists=.env gateway/server.js",
+    "start": "concurrently -k -n api,gateway -c green,cyan \"npm:prod:api\" \"npm:prod:gateway\"",
+    "dev:api": "python -m uvicorn api.main:app --host 127.0.0.1 --port 8001 --reload",
+    "dev:gateway": "node --watch --env-file-if-exists=.env gateway/server.js",
     "dev:web": "npm --prefix frontend run dev",
     "dev": "concurrently -k -n api,gateway,web -c green,cyan,magenta \"npm:dev:api\" \"npm:dev:gateway\" \"npm:dev:web\"",
     "build": "npm --prefix frontend run build",
-    "start:prod": "concurrently -k -n api,gateway -c green,cyan \"npm:dev:api\" \"npm:dev:gateway\"",
     "install:all": "npm install && npm --prefix gateway install && npm --prefix frontend install"
   },
   "devDependencies": {
