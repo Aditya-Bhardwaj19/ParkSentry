@@ -91,6 +91,40 @@ app.get('/api/maptoken', async (_req, res) => {
   }
 });
 
+// --------------------------------------------------------------------------- //
+// Road route from a police station to a hotspot cell (Mappls Directions).
+// Proxied here so the token stays server-side and the browser avoids CORS.
+// Returns the route geometry as [lat,lng] pairs + distance (m) + duration (s).
+// --------------------------------------------------------------------------- //
+app.get('/api/route', async (req, res) => {
+  const { slat, slng, dlat, dlng } = req.query;
+  if (![slat, slng, dlat, dlng].every((v) => v !== undefined && v !== '')) {
+    return res.status(400).json({ error: 'missing slat/slng/dlat/dlng' });
+  }
+  try {
+    const { token } = await mintMapplsToken();
+    if (!token) return res.status(200).json({ configured: false });
+    const coords = `${slng},${slat};${dlng},${dlat}`;
+    const url =
+      `https://apis.mappls.com/advancedmaps/v1/${token}/route_adv/driving/${coords}` +
+      `?geometries=geojson&overview=full`;
+    const r = await fetch(url);
+    const data = await r.json();
+    const route = data && data.routes && data.routes[0];
+    if (!route) {
+      return res.status(502).json({ error: (data && data.message) || 'no route found' });
+    }
+    const coordsOut = (route.geometry && route.geometry.coordinates) || [];
+    res.json({
+      path: coordsOut.map(([lng, lat]) => [lat, lng]),
+      distance: route.distance,
+      duration: route.duration,
+    });
+  } catch (e) {
+    res.status(502).json({ error: String(e.message || e) });
+  }
+});
+
 app.get('/health', (_req, res) => res.json({ status: 'ok', api: API_URL }));
 
 // --------------------------------------------------------------------------- //

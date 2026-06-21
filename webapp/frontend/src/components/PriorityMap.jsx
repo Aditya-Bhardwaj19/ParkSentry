@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import MapView from './MapView.jsx';
 import { Icon } from './icons.jsx';
-import { getBlocks, getStations, getHotspots } from '../api.js';
+import { getBlocks, getStations, getHotspots, getStationGeo, getRoute } from '../api.js';
 import { useT } from '../i18n/index.jsx';
 
 export default function PriorityMap() {
@@ -15,6 +15,14 @@ export default function PriorityMap() {
   const [cells, setCells] = useState([]);
   const [err, setErr] = useState(null);
 
+  // --- station assignment + routing ---
+  const [stationGeo, setStationGeo] = useState([]); // [{station, lat, lon, cells}]
+  const [selCell, setSelCell] = useState(null); // selected cell id
+  const [assignTo, setAssignTo] = useState(''); // chosen station name
+  const [route, setRoute] = useState(null); // {path, from, distance, duration}
+  const [routing, setRouting] = useState(false);
+  const [routeErr, setRouteErr] = useState(null);
+
   useEffect(() => {
     getBlocks()
       .then((b) => {
@@ -23,7 +31,65 @@ export default function PriorityMap() {
       })
       .catch((e) => setErr(e.message));
     getStations().then(setStations).catch(() => {});
+    getStationGeo().then((d) => setStationGeo(d.stations)).catch(() => {});
   }, []);
+
+  const stationMap = useMemo(() => {
+    const m = {};
+    stationGeo.forEach((s) => { m[s.station] = s; });
+    return m;
+  }, [stationGeo]);
+
+  const selectedCell = useMemo(
+    () => cells.find((c) => String(c.cell) === String(selCell)) || null,
+    [cells, selCell]
+  );
+
+  // A dot was clicked: select its cell, default the assignment to its station.
+  const onSelect = useCallback(
+    (cellId) => {
+      const c = cells.find((x) => String(x.cell) === String(cellId));
+      if (!c) return;
+      setSelCell(c.cell);
+      setAssignTo(c.dom_police_station || '');
+      setRoute(null);
+      setRouteErr(null);
+    },
+    [cells]
+  );
+
+  const showRoute = () => {
+    const c = selectedCell;
+    const from = stationMap[assignTo];
+    if (!c || !from) return;
+    setRouting(true);
+    setRouteErr(null);
+    getRoute({ lat: from.lat, lon: from.lon }, { lat: c.lat, lon: c.lon })
+      .then((r) => {
+        if (!r.path || !r.path.length) throw new Error('no path');
+        setRoute({
+          path: r.path,
+          from: { lat: from.lat, lon: from.lon, label: assignTo },
+          distance: r.distance,
+          duration: r.duration,
+        });
+      })
+      .catch(() => setRouteErr(t('map.routeErr')))
+      .finally(() => setRouting(false));
+  };
+
+  const clearSel = () => {
+    setSelCell(null);
+    setRoute(null);
+    setRouteErr(null);
+  };
+
+  // Drop the selection/route if the selected cell leaves the filtered set.
+  useEffect(() => {
+    if (selCell && !cells.some((c) => String(c.cell) === String(selCell))) {
+      clearSel();
+    }
+  }, [cells, selCell]);
 
   useEffect(() => {
     if (selBlocks === null) return;
@@ -41,6 +107,7 @@ export default function PriorityMap() {
   const points = useMemo(
     () =>
       cells.map((c) => ({
+        id: c.cell,
         lat: c.lat,
         lon: c.lon,
         epi: c.EPI,
@@ -73,6 +140,59 @@ export default function PriorityMap() {
       {err && <div className="error-banner">{err}</div>}
       <div className="map-layout">
         <aside className="panel controls">
+          {selectedCell && (
+            <div className="control assign-card">
+              <div className="control-title">
+                {t('map.assignTitle')}
+                <button className="link-btn" onClick={clearSel} title={t('map.clearRoute')}>
+                  ✕
+                </button>
+              </div>
+              <div className="assign-cell">
+                <b>{t('map.popup.rank', { rank: selectedCell.rank })}</b> · EPI{' '}
+                {selectedCell.EPI}
+                <div className="muted">{selectedCell.dom_junction}</div>
+              </div>
+              <label className="assign-label">{t('map.assignTo')}</label>
+              <select
+                className="assign-select"
+                value={assignTo}
+                onChange={(e) => {
+                  setAssignTo(e.target.value);
+                  setRoute(null);
+                }}
+              >
+                {stationGeo.map((s) => (
+                  <option key={s.station} value={s.station}>
+                    {s.station}
+                  </option>
+                ))}
+              </select>
+              <button
+                className="primary-btn route-btn"
+                onClick={showRoute}
+                disabled={routing || !assignTo}
+              >
+                <Icon name="pin" size={14} />{' '}
+                {routing ? t('map.routing') : t('map.showRoute')}
+              </button>
+              {route && (
+                <div className="route-info">
+                  <span>
+                    {t('map.routeInfo', {
+                      km: (route.distance / 1000).toFixed(1),
+                      min: Math.round(route.duration / 60),
+                    })}
+                  </span>
+                  <button className="link-btn" onClick={() => setRoute(null)}>
+                    {t('map.clearRoute')}
+                  </button>
+                </div>
+              )}
+              {routeErr && <div className="route-err">{routeErr}</div>}
+            </div>
+          )}
+
           <div className="control">
             <div className="control-title">
               {t('map.topN')} <span className="val">{topN}</span>
@@ -147,7 +267,7 @@ export default function PriorityMap() {
         </aside>
 
         <div className="map-wrap">
-          <MapView points={points} height={560} />
+          <MapView points={points} height={560} onSelect={onSelect} route={route} />
         </div>
       </div>
     </div>

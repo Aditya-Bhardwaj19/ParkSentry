@@ -130,6 +130,23 @@ def stations():
     return sorted(_hotspots()["dom_police_station"].dropna().unique().tolist())
 
 
+@app.get("/api/station-geo")
+def station_geo():
+    """Per-station location for routing in the UI. The dataset has no actual
+    station-building coordinates, so we use the CENTROID of each station's cells
+    (the centre of its patrol area)."""
+    _require_outputs()
+    df = _hotspots().dropna(subset=["dom_police_station"])
+    g = (df.groupby("dom_police_station")
+           .agg(lat=("lat", "mean"), lon=("lon", "mean"), cells=("cell", "size"))
+           .reset_index()
+           .sort_values("dom_police_station"))
+    return {"stations": [
+        {"station": r["dom_police_station"], "lat": float(r["lat"]),
+         "lon": float(r["lon"]), "cells": int(r["cells"])}
+        for _, r in g.iterrows()]}
+
+
 @app.get("/api/hotspots")
 def hotspots(
     top: int = Query(100, ge=1, le=2000),

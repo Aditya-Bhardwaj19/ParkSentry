@@ -28,3 +28,6 @@ export const getModelComparison = () => getJSON('/api/model-comparison');
 export const getForecast = (params) => getJSON('/api/forecast?' + qs(params));
 export const getPlots = () => getJSON('/api/plots');
 export const plotUrl = (name) => `/api/plots/${name}`;
+export const getStationGeo = () => getJSON('/api/station-geo');
+export const getRoute = (from, to) =>
+  getJSON(`/api/route?slat=${from.lat}&slng=${from.lon}&dlat=${to.lat}&dlng=${to.lon}`);

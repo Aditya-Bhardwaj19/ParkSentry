@@ -36,14 +36,26 @@ function EpiLegend() {
  * Each point: { lat, lon, epi, popup }. Markers are sized/coloured by EPI and
  * show `popup` (HTML string) on click.
  */
-export default function MapView({ points = [], height = 560, zoom = 11 }) {
+export default function MapView({ points = [], height = 560, zoom = 11, onSelect = null, route = null }) {
   const elRef = useRef(null);
   const mapIdRef = useRef(`mappls-map-${Math.random().toString(36).slice(2)}`);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
+  const routeRef = useRef(null);
+  const stationRef = useRef(null);
   const [error, setError] = useState(null);
   const [ready, setReady] = useState(false);
   const { t } = useT();
+
+  // Bridge so a marker's inline onclick (rendered into the SDK's DOM) can reach
+  // React. Only the map that passes onSelect (the Priority Map) registers it.
+  useEffect(() => {
+    if (!onSelect) return undefined;
+    window.__psSelectCell = onSelect;
+    return () => {
+      if (window.__psSelectCell === onSelect) delete window.__psSelectCell;
+    };
+  }, [onSelect]);
 
   useEffect(() => {
     let cancelled = false;
@@ -86,10 +98,14 @@ export default function MapView({ points = [], height = 560, zoom = 11 }) {
 
     points.forEach((p) => {
       const sz = Math.max(10, Math.round(10 + (p.epi || 0) * 0.22));
+      const click =
+        onSelect && p.id != null
+          ? `onclick="window.__psSelectCell&&window.__psSelectCell('${String(p.id).replace(/['"\\]/g, '')}')"`
+          : '';
       const html =
-        `<div style="width:${sz}px;height:${sz}px;border-radius:50%;` +
+        `<div ${click} style="width:${sz}px;height:${sz}px;border-radius:50%;` +
         `background:${epiColor(p.epi)};opacity:.8;border:1px solid #7a0000;` +
-        `box-shadow:0 0 4px rgba(0,0,0,.5)"></div>`;
+        `box-shadow:0 0 4px rgba(0,0,0,.5)${onSelect ? ';cursor:pointer' : ''}"></div>`;
       try {
         const mk = new M.Marker({
           map: mapRef.current,
@@ -104,6 +120,45 @@ export default function MapView({ points = [], height = 560, zoom = 11 }) {
       }
     });
   }, [points, ready]);
+
+  // Draw the station→cell road route (polyline) + a station marker.
+  useEffect(() => {
+    const M = mapplsGlobal();
+    if (!ready || !mapRef.current || !M) return;
+    try { routeRef.current && routeRef.current.remove(); } catch (_) { /* */ }
+    try { stationRef.current && stationRef.current.remove(); } catch (_) { /* */ }
+    routeRef.current = null;
+    stationRef.current = null;
+    if (!route || !route.path || !route.path.length) return;
+    try {
+      routeRef.current = new M.Polyline({
+        map: mapRef.current,
+        path: route.path.map(([lat, lng]) => ({ lat, lng })),
+        strokeColor: '#2563eb',
+        strokeWeight: 5,
+        strokeOpacity: 0.85,
+        fitbounds: true,
+      });
+    } catch (_) {
+      /* polyline unsupported -> skip the line, still show the station marker */
+    }
+    if (route.from) {
+      try {
+        const html =
+          '<div style="width:16px;height:16px;border-radius:50%;background:#2563eb;' +
+          'border:2px solid #fff;box-shadow:0 0 5px rgba(0,0,0,.6)"></div>';
+        stationRef.current = new M.Marker({
+          map: mapRef.current,
+          position: { lat: route.from.lat, lng: route.from.lon },
+          fitbounds: false,
+          html,
+          popupHtml: popupCard(`🚓 ${route.from.label || 'Station'}`),
+        });
+      } catch (_) {
+        /* skip station marker */
+      }
+    }
+  }, [route, ready]);
 
   // --- Empty / error state (e.g. no Mappls credentials) ---
   if (error) {
