@@ -60,6 +60,9 @@ class Forecaster:
         # global train-mean fallback, so inference mirrors the panel exactly.
         self._cells = set(self.cell_static.index)
         self.global_mean = float(self.enc.get("global_mean", 0.0))
+        # leak-safe expanding target encodings -> static full-train lookups at
+        # inference (every future date is after the whole train window).
+        self._exp = self.enc.get("expanding", {})
 
     # ----------------------------------------------------------------- #
     def _lags(self, cell, date, block) -> dict:
@@ -96,6 +99,21 @@ class Forecaster:
         w = s[(s.index < date) & (s.index >= date - pd.Timedelta(days=7))]
         return float(w.mean()) if len(w) else 0.0
 
+    def _lag1_of(self, cell, block, date) -> float:
+        """A cell-block's count exactly one day before `date` (neighbour use)."""
+        s = self._series.get((cell, block))
+        if s is None:
+            return 0.0
+        return float(s.get(date - pd.Timedelta(days=1), 0.0))
+
+    def _nz7_of(self, cell, block, date) -> float:
+        """A cell-block's last-7-day nonzero rate before `date` (neighbour use)."""
+        s = self._series.get((cell, block))
+        if s is None:
+            return 0.0
+        w = s[(s.index < date) & (s.index >= date - pd.Timedelta(days=7))]
+        return float((w > 0).mean()) if len(w) else 0.0
+
     def _neighbor_cells(self, cell) -> list:
         """The 8-connected grid neighbours that are known (kept) cells."""
         try:
@@ -117,15 +135,18 @@ class Forecaster:
         date = pd.Timestamp(date)
         nbrs = self._neighbor_cells(cell)
         if not nbrs:
-            return dict(nbr_roll7=0.0, nbr_blk_mean=0.0)
+            return dict(nbr_roll7=0.0, nbr_blk_mean=0.0, nbr_lag1=0.0, nbr_nz7=0.0)
         rolls = [self._roll7_of(nc, block, date) for nc in nbrs]
+        lag1s = [self._lag1_of(nc, block, date) for nc in nbrs]
+        nz7s = [self._nz7_of(nc, block, date) for nc in nbrs]
         blks = []
         for nc in nbrs:
             if (nc, block) in self.cell_blk_hist.index:
                 blks.append(float(self.cell_blk_hist.loc[(nc, block), "cell_blk_mean"]))
             else:
                 blks.append(self.global_mean)
-        return dict(nbr_roll7=float(np.mean(rolls)), nbr_blk_mean=float(np.mean(blks)))
+        return dict(nbr_roll7=float(np.mean(rolls)), nbr_blk_mean=float(np.mean(blks)),
+                    nbr_lag1=float(np.mean(lag1s)), nbr_nz7=float(np.mean(nz7s)))
 
     def _cell_roll_day(self, cell, date, block) -> float:
         date = pd.Timestamp(date)
@@ -177,6 +198,11 @@ class Forecaster:
                 d["cell_sev"], d["cell_veh"], d["cell_jshare"])
         f["ps_target_enc"] = float(cs["ps_target_enc"]) if cs is not None else self.enc["ps_global_mean"]
         f["log_total_events"] = float(cs["log_total_events"]) if cs is not None else 0.0
+        if self._exp:
+            gm, dw = self._exp["global"], date.dayofweek
+            f["exp_cb"] = self._exp["exp_cb"].get((cell, block), gm)
+            f["exp_cdb"] = self._exp["exp_cdb"].get((cell, dw, block), gm)
+            f["exp_db"] = self._exp["exp_db"].get((dw, block), gm)
         return pd.DataFrame([f])[self.features].astype(float)
 
     # ----------------------------------------------------------------- #
@@ -273,11 +299,23 @@ class Forecaster:
             self.enc["ps_global_mean"]).to_numpy()
         lte = self.cell_static["log_total_events"].reindex(cells).fillna(0.0).to_numpy()
 
-        # spatial neighbours: average roll7 / cell_blk_mean over the 8 kept neighbours
+        # recent nonzero rate per cell (for the nbr_nz7 neighbour feature)
+        def roll_nz(win):
+            sel = [d for d in range(dday - win, dday) if d in cset]
+            if not sel:
+                return np.zeros(n)
+            return np.nan_to_num((Mb[sel].reindex(cells) > 0).mean(axis=1).to_numpy())
+        nz7 = roll_nz(7)
+
+        # spatial neighbours: average roll7 / cell_blk_mean / lag1 / nz7 over the
+        # 8 kept neighbours (mirrors features.add_spatial exactly).
         rc_idx = pd.MultiIndex.from_arrays([self._fr, self._fc])
         roll7_s = pd.Series(roll7, index=rc_idx)
         cbm_s = pd.Series(cbm, index=rc_idx)
-        nr_sum = np.zeros(n); nb_sum = np.zeros(n); cnt = np.zeros(n)
+        lag1_s = pd.Series(lag1, index=rc_idx)
+        nz7_s = pd.Series(nz7, index=rc_idx)
+        nr_sum = np.zeros(n); nb_sum = np.zeros(n)
+        nl_sum = np.zeros(n); nz_sum = np.zeros(n); cnt = np.zeros(n)
         for dr in (-1, 0, 1):
             for dc in (-1, 0, 1):
                 if dr == 0 and dc == 0:
@@ -285,12 +323,19 @@ class Forecaster:
                 key = pd.MultiIndex.from_arrays([self._fr + dr, self._fc + dc])
                 rv = roll7_s.reindex(key).to_numpy()
                 bv = cbm_s.reindex(key).to_numpy()
+                lv = lag1_s.reindex(key).to_numpy()
+                zv = nz7_s.reindex(key).to_numpy()
                 present = ~np.isnan(rv)
                 nr_sum += np.where(present, np.nan_to_num(rv), 0.0)
                 nb_sum += np.where(present, np.nan_to_num(bv), 0.0)
+                nl_sum += np.where(present, np.nan_to_num(lv), 0.0)
+                nz_sum += np.where(present, np.nan_to_num(zv), 0.0)
                 cnt += present
-        nbr_roll7 = nr_sum / np.maximum(cnt, 1)
-        nbr_blk_mean = nb_sum / np.maximum(cnt, 1)
+        den = np.maximum(cnt, 1)
+        nbr_roll7 = nr_sum / den
+        nbr_blk_mean = nb_sum / den
+        nbr_lag1 = nl_sum / den
+        nbr_nz7 = nz_sum / den
 
         two_pi = 2 * np.pi
         data = {
@@ -301,6 +346,7 @@ class Forecaster:
             "dow_sin": np.sin(two_pi * D.dayofweek / 7), "dow_cos": np.cos(two_pi * D.dayofweek / 7),
             "month_sin": np.sin(two_pi * D.month / 12), "month_cos": np.cos(two_pi * D.month / 12),
             "cell_lat": lat, "cell_lon": lon, "nbr_roll7": nbr_roll7, "nbr_blk_mean": nbr_blk_mean,
+            "nbr_lag1": nbr_lag1, "nbr_nz7": nbr_nz7,
             "lag1": lag1, "lag2": lag2, "lag7": lag7, "lag14": lag14,
             "roll7_mean": roll7, "roll14_mean": roll14, "roll28_mean": roll28,
             "ewm7": ewm7, "cell_roll_day": crd,
@@ -308,6 +354,13 @@ class Forecaster:
             "cell_sev": sev, "cell_veh": veh, "cell_jshare": jsh,
             "ps_target_enc": pste, "log_total_events": lte,
         }
+        if self._exp:
+            gm, dw = self._exp["global"], int(D.dayofweek)
+            cb_t, cdb_t, db_t = self._exp["exp_cb"], self._exp["exp_cdb"], self._exp["exp_db"]
+            ca = cells.to_numpy()
+            data["exp_cb"] = np.array([cb_t.get((c, b), gm) for c in ca])
+            data["exp_cdb"] = np.array([cdb_t.get((c, dw, b), gm) for c in ca])
+            data["exp_db"] = float(db_t.get((dw, b), gm))
         X = pd.DataFrame(data, index=cells)[self.features].astype(float)
         return cells, X
 

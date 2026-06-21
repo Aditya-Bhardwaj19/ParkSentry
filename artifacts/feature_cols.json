@@ -1,14 +1,20 @@
 [
   "time_block",
+  "is_weekend",
+  "month",
+  "day",
   "peak_w",
+  "holiday",
   "block_sin",
   "dow_sin",
   "dow_cos",
-  "month_cos",
+  "month_sin",
   "cell_lat",
   "cell_lon",
   "nbr_roll7",
   "nbr_blk_mean",
+  "nbr_lag1",
+  "nbr_nz7",
   "lag1",
   "lag2",
   "lag7",
@@ -24,5 +30,8 @@
   "cell_veh",
   "cell_jshare",
   "ps_target_enc",
-  "log_total_events"
+  "log_total_events",
+  "exp_cb",
+  "exp_cdb",
+  "exp_db"
 ]
