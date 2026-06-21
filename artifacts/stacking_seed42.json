@@ -1,0 +1,24 @@
+{
+  "seed": 42,
+  "best_base_name": "XGB-Poisson",
+  "best_base": 0.564922034740448,
+  "results": {
+    "blend:capopt-weights(rank)": 0.5689031481742859,
+    "blend:capopt-weights(raw)": 0.5680500268936157,
+    "blend:equal-rankmean": 0.5680026412010193,
+    "blend:equal-mean": 0.567828893661499,
+    "stack:positive-linear": 0.5653643608093262,
+    "base:XGB-Poisson": 0.564922034740448,
+    "base:LGBM-Tweedie": 0.5648272633552551,
+    "base:HistGB-Poisson": 0.5642901062965393,
+    "base:RandomForest": 0.5641005635261536,
+    "base:RankGauss-MLP": 0.5571494102478027
+  },
+  "weights_raw": {
+    "LGBM-Tweedie": 0.04179458187646781,
+    "XGB-Poisson": 0.026235982225586867,
+    "HistGB-Poisson": 0.47595999561708546,
+    "RandomForest": 0.43496437205756755,
+    "RankGauss-MLP": 0.02104506822329241
+  }
+}

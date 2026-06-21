@@ -13,6 +13,7 @@
 
 | Approach | capture@5% | MAE | Verdict |
 |---|---|---|---|
+| Tree rank-mean blend (4 models) | ~0.5724 | — | +0.10pp, consistent — not worth 4× models |
 | **GBM + spatial + expanding-TE** (shipped) | **0.5713** | **0.253** | ✅ **production champion** |
 | GBM + spatial + expanding-TE + q90-OOF | 0.5714 | 0.254 | flat — not worth the complexity |
 | Ensemble (0.7·GBM + 0.3·RankGauss-NN) | 0.5697 | 0.273 | works, but needs 2 models — skipped |
@@ -36,8 +37,20 @@
 3. **Encoding leak-safety is a 4-point swing.** The *same* `(cell×dow×block)` target encoding cost −3.5pp as a naive train-wide mean but gained +0.7pp as a causal expanding-window encoder. Implementation detail > feature choice.
 4. **The signal is saturated.** q90 (high-quantile) out-of-fold encoding — which directly targets the top-K tail — came back **flat**, because the existing features (`cell_blk_nonzero`, `exp_*`, neighbours, lags) already encode hotspot severity. There is no more juice in re-deriving statistics from the violation counts.
 
+## Blending / stacking (diverse base models)
+Tested whether combining models beats the single champion. Five base learners
+(LGBM-Tweedie, XGBoost-Poisson, HistGB-Poisson, RandomForest, RankGauss-MLP),
+blended by equal mean, equal rank-mean, capture-optimised weights, and a
+positive-linear stack.
+
+- A **tree-only rank-mean blend** beats the single champion by a **small but consistent ~+0.10pp** (0.5713 → ~0.5724; +0.05 / +0.11 / +0.13pp across seeds 42 / 1 / 7 — all positive). The lift comes from the decorrelated HistGB/RandomForest members.
+- **Including the RankGauss-MLP *hurts*** every blend (drags to ~0.569) — it's weaker and gets over-weighted in rank space.
+- An earlier +0.3pp blend lift was a **mirage**: it only appeared when base models were data-starved (trained on train−21d), which made them weak *and* decorrelated. On full data the bases are strong and 0.96+ correlated, so the diversity gain mostly evaporates.
+
+**Decision: not shipped.** +0.10pp is not worth running 4 models instead of 1 (4× training/inference, and `predict.py` would need all four loaded + rank-averaged). The single LightGBM-Tweedie captures ~99.8% of the blend's performance at 25% of the cost.
+
 ## Conclusion
-The forecaster is at its ceiling on this data. The only path to a *meaningful* further gain is **new signal** the model can't currently see — and that is out of scope for this project (congestion from the violation dataset only). Recommended stopping point.
+The forecaster is at its ceiling on this data. Feature engineering and leak-safe encoding gave the only meaningful win (+0.67pp); deep learning lost, and blending/stacking adds only a marginal, complexity-heavy +0.10pp. The only path to a *meaningful* further gain is **new signal** the model can't currently see — and that is out of scope for this project (congestion from the violation dataset only). Recommended stopping point.
 
 ## Reproduce
 - `experiments/deep_models.py` — MLP / LSTM / GRU vs trees
@@ -45,4 +58,6 @@ The forecaster is at its ceiling on this data. The only path to a *meaningful* f
 - `experiments/nn_preprocessing.py` — RankGauss + entity embeddings
 - `experiments/improve_all.py` — expanding-window encoding + ensemble
 - `experiments/q90_encoder.py` — q90 out-of-fold encoding
-- Result tables saved alongside in `artifacts/*.csv`.
+- `experiments/stacking.py` — 5-model blending/stacking (blend-tuning regime)
+- `experiments/blend_fulltrain.py` — full-train blend vs champion (multi-seed)
+- Result tables / per-seed JSON saved alongside in `artifacts/`.

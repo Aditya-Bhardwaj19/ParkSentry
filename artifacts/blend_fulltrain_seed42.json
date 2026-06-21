@@ -1,0 +1,16 @@
+{
+  "seed": 42,
+  "champion": 0.5713,
+  "results": {
+    "blend:equal-rankmean(trees)": 0.5717625617980957,
+    "base:LGBM-Tweedie": 0.5712570548057556,
+    "blend:rankmean(LGBM+HistGB)": 0.5711464881896973,
+    "blend:equal-rankmean(all)": 0.5697246193885803,
+    "base:XGB-Poisson": 0.5695192813873291,
+    "blend:equal-mean(all)": 0.5692822933197021,
+    "blend:rankmean(HistGB+RF)": 0.568429172039032,
+    "base:RandomForest": 0.566849410533905,
+    "base:HistGB-Poisson": 0.5658857226371765,
+    "base:RankGauss-MLP": 0.5615728497505188
+  }
+}
