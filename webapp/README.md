@@ -1,4 +1,4 @@
-# ParkSentry — web app (React + Node + Python)
+# ParkSentry - web app (React + Node + Python)
 
 A three-tier app over the ML pipeline, with **Mappls (MapmyIndia)** interactive
 maps. For project overview and full setup, see the [root README](../README.md);
@@ -20,7 +20,7 @@ Python FastAPI ML service   :8001   api/main.py
 ```
 
 The browser only ever talks to the gateway. The Python ML code (`config.py`,
-`predict.py`, the `outputs/` CSVs) is reused unchanged — this app is an HTTP + UI
+`predict.py`, the `outputs/` CSVs) is reused unchanged - this app is an HTTP + UI
 layer over it.
 
 ## Prerequisites
@@ -35,7 +35,7 @@ cp .env.example .env        # then edit .env and paste your Mappls keys
 ```
 `.env` is **gitignored**. The gateway loads it automatically (`--env-file-if-exists=.env`)
 and mints the map token from `MAPPLS_CLIENT_ID` / `MAPPLS_CLIENT_SECRET`. Without
-keys, the data, tables, charts and forecaster all still work — only the map shows
+keys, the data, tables, charts and forecaster all still work - only the map shows
 a "credentials not configured" notice.
 
 ## Install & run

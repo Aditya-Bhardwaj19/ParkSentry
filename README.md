@@ -1,9 +1,9 @@
-# ParkSentry — Parking-Induced Congestion Intelligence
+# ParkSentry - Parking-Induced Congestion Intelligence
 
 ParkSentry turns a stream of **illegal-parking violations** into a forward-looking
 **enforcement plan**: it forecasts where and when illegal parking will occur,
 weights each spot by its likely **traffic-congestion harm**, and ranks the
-~150 m road cells a patrol should visit next — shown on an interactive map.
+~150 m road cells a patrol should visit next - shown on an interactive map.
 
 > **Why parking → congestion?** Illegally parked vehicles block carriageway and
 > back up junctions. The dataset has no traffic-flow speeds, so we *forecast the
@@ -12,7 +12,7 @@ weights each spot by its likely **traffic-congestion harm**, and ranks the
 > instead of reactive.
 
 **Headline result:** patrolling the model's **top 5%** of (cell, time) slots
-captures **57.1%** of all violations — an **11× lift over random** — using a
+captures **57.1%** of all violations - an **11× lift over random** - using a
 single LightGBM-Tweedie forecaster (capture@5% **0.5713**, MAE **0.2531**).
 Full modeling story in [docs/MODELS.md](docs/MODELS.md); feature work in
 [docs/FEATURE_ENGINEERING.md](docs/FEATURE_ENGINEERING.md).
@@ -20,10 +20,10 @@ Full modeling story in [docs/MODELS.md](docs/MODELS.md); feature work in
 ---
 
 ## What it produces
-- **Priority map** — every ~150 m cell scored by an **Enforcement Priority Index (EPI)** = `predicted daily violations × mean congestion impact`, plotted on Mappls maps.
-- **Priority list** — the ranked cells with station, junction, peak block and predicted volume.
-- **Live forecaster** — score *any* (cell, date, 4-hour block) on demand, including future dates.
-- **Model & EDA** — challenger comparison, capture curve, feature importance, data diagnostics.
+- **Priority map** - every ~150 m cell scored by an **Enforcement Priority Index (EPI)** = `predicted daily violations × mean congestion impact`, plotted on Mappls maps.
+- **Priority list** - the ranked cells with station, junction, peak block and predicted volume.
+- **Live forecaster** - score *any* (cell, date, 4-hour block) on demand, including future dates.
+- **Model & EDA** - challenger comparison, capture curve, feature importance, data diagnostics.
 
 ## Architecture
 
@@ -42,14 +42,14 @@ Full modeling story in [docs/MODELS.md](docs/MODELS.md); feature work in
 ```
 
 ## Techniques used
-- **Cleaning & framing** — JSON violation parsing, parking-only filter, geo/UTC→local validation, conservative `rejected`/`duplicate` drop.
-- **Congestion-impact heuristic** — `severity × vehicle footprint × peak × junction`, multiplicative, weights in `config.py` (declared proxy, recalibratable).
-- **Spatio-temporal panel** — ~150 m grid × date × 4-hour block, zero-filled (1.26 M rows, ~4.7% non-zero).
-- **Leak-safe feature engineering** — causal autoregressive lags, rolling mean/nonzero-rate, EWMA, 8-neighbour spatial features, train-only cell priors, and **leak-safe expanding-window target encoding**.
-- **Modeling** — gradient boosting with a **Tweedie** objective for the zero-inflated count target; **temporal** train/test split; **top-K capture** as the operational metric.
-- **Targeting** — per-cell **EPI** (forecast × impact) + secondary **DBSCAN** density zones.
-- **Deployable inference** — `predict.Forecaster` rebuilds the exact feature vector causally from saved artifacts (no leakage, works for next-day forecasts).
-- **App** — React + Node/Express + FastAPI, **Mappls** interactive maps.
+- **Cleaning & framing** - JSON violation parsing, parking-only filter, geo/UTC→local validation, conservative `rejected`/`duplicate` drop.
+- **Congestion-impact heuristic** - `severity × vehicle footprint × peak × junction`, multiplicative, weights in `config.py` (declared proxy, recalibratable).
+- **Spatio-temporal panel** - ~150 m grid × date × 4-hour block, zero-filled (1.26 M rows, ~4.7% non-zero).
+- **Leak-safe feature engineering** - causal autoregressive lags, rolling mean/nonzero-rate, EWMA, 8-neighbour spatial features, train-only cell priors, and **leak-safe expanding-window target encoding**.
+- **Modeling** - gradient boosting with a **Tweedie** objective for the zero-inflated count target; **temporal** train/test split; **top-K capture** as the operational metric.
+- **Targeting** - per-cell **EPI** (forecast × impact) + secondary **DBSCAN** density zones.
+- **Deployable inference** - `predict.Forecaster` rebuilds the exact feature vector causally from saved artifacts (no leakage, works for next-day forecasts).
+- **App** - React + Node/Express + FastAPI, **Mappls** interactive maps.
 
 ## Repository layout
 
@@ -94,7 +94,7 @@ cd webapp
 cp .env.example .env                     # then edit .env and paste your keys
 ```
 Create an app at <https://apps.mappls.com> (enable the Map SDK) to get a
-`CLIENT_ID` / `CLIENT_SECRET`. `webapp/.env` is **gitignored** — secrets never
+`CLIENT_ID` / `CLIENT_SECRET`. `webapp/.env` is **gitignored** - secrets never
 get committed. Without keys, everything works except the interactive map.
 
 ### 4. Run on http://localhost:8000
@@ -111,7 +111,7 @@ For hot-reload development instead: `npm run dev` → open **http://localhost:51
 ---
 
 ## Documentation
-- **[docs/FEATURE_ENGINEERING.md](docs/FEATURE_ENGINEERING.md)** — preprocessing, every feature family, and what failed vs. succeeded (incl. the leak-safe-encoding swing).
-- **[docs/MODELS.md](docs/MODELS.md)** — every model tried, best hyperparameters, and head-to-head results (trees vs. deep learning vs. blending).
-- **[webapp/README.md](webapp/README.md)** — web-app architecture and the FastAPI endpoint reference.
+- **[docs/FEATURE_ENGINEERING.md](docs/FEATURE_ENGINEERING.md)** - preprocessing, every feature family, and what failed vs. succeeded (incl. the leak-safe-encoding swing).
+- **[docs/MODELS.md](docs/MODELS.md)** - every model tried, best hyperparameters, and head-to-head results (trees vs. deep learning vs. blending).
+- **[webapp/README.md](webapp/README.md)** - web-app architecture and the FastAPI endpoint reference.
 - Per-module rationale lives in each file's docstring.
