@@ -1,0 +1,27 @@
+# Keep the build context (and image) lean and secret-free.
+**/node_modules
+webapp/frontend/dist
+.git
+.gitignore
+
+# Secrets + local runtime state (assignments persist via a mounted volume).
+**/.env
+**/.env.*
+!**/.env.example
+data
+
+# Python / editor / OS cruft
+**/__pycache__
+*.py[cod]
+.venv
+venv
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Not needed to RUN the app (offline studies, scratch, docs build context)
+experiments
+COMMIT_MSG.txt
+*.log
+repomix-output.xml
