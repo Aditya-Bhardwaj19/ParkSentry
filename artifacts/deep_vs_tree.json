@@ -1,0 +1,117 @@
+{
+  "L": 14,
+  "tweedie_p": 1.5,
+  "device": "cuda",
+  "results": [
+    {
+      "model": "LightGBM-Tweedie",
+      "MAE": 0.2697,
+      "RMSE": 1.4514,
+      "R2": 0.1913,
+      "PoissonDev": 0.9301,
+      "capture@1%": 0.292,
+      "capture@5%": 0.5646,
+      "capture@10%": 0.6912,
+      "capture@20%": 0.8119
+    },
+    {
+      "model": "RandomForest",
+      "MAE": 0.2845,
+      "RMSE": 1.4486,
+      "R2": 0.1945,
+      "PoissonDev": 1.0436,
+      "capture@1%": 0.2864,
+      "capture@5%": 0.5636,
+      "capture@10%": 0.6891,
+      "capture@20%": 0.8081
+    },
+    {
+      "model": "LightGBM-Poisson",
+      "MAE": 0.2806,
+      "RMSE": 1.4733,
+      "R2": 0.1668,
+      "PoissonDev": 0.9135,
+      "capture@1%": 0.2794,
+      "capture@5%": 0.5632,
+      "capture@10%": 0.6852,
+      "capture@20%": 0.8063
+    },
+    {
+      "model": "HistGB-Poisson",
+      "MAE": 0.2844,
+      "RMSE": 1.4805,
+      "R2": 0.1586,
+      "PoissonDev": 0.9108,
+      "capture@1%": 0.2816,
+      "capture@5%": 0.5631,
+      "capture@10%": 0.6879,
+      "capture@20%": 0.8038
+    },
+    {
+      "model": "XGBoost-Poisson",
+      "MAE": 0.283,
+      "RMSE": 1.4684,
+      "R2": 0.1723,
+      "PoissonDev": 0.9048,
+      "capture@1%": 0.287,
+      "capture@5%": 0.5612,
+      "capture@10%": 0.6844,
+      "capture@20%": 0.8033
+    },
+    {
+      "model": "MLP(tabular)",
+      "MAE": 0.31945,
+      "RMSE": 1.48913,
+      "R2": 0.14878,
+      "PoissonDev": 0.87852,
+      "capture@1%": 0.27754,
+      "capture@5%": 0.54693,
+      "capture@10%": 0.6814,
+      "capture@20%": 0.80303
+    },
+    {
+      "model": "Baseline(hist-mean)",
+      "MAE": 0.2876,
+      "RMSE": 1.4735,
+      "R2": 0.1665,
+      "PoissonDev": 1.0028,
+      "capture@1%": 0.2686,
+      "capture@5%": 0.5372,
+      "capture@10%": 0.6682,
+      "capture@20%": 0.7996
+    },
+    {
+      "model": "GRU",
+      "MAE": 0.34472,
+      "RMSE": 1.48827,
+      "R2": 0.14976,
+      "PoissonDev": 0.93926,
+      "capture@1%": 0.26376,
+      "capture@5%": 0.53374,
+      "capture@10%": 0.64974,
+      "capture@20%": 0.77039
+    },
+    {
+      "model": "Poisson-GLM",
+      "MAE": 0.3093,
+      "RMSE": 1.5212,
+      "R2": 0.1118,
+      "PoissonDev": 0.8989,
+      "capture@1%": 0.2681,
+      "capture@5%": 0.5233,
+      "capture@10%": 0.6525,
+      "capture@20%": 0.7826
+    },
+    {
+      "model": "LSTM",
+      "MAE": 0.34716,
+      "RMSE": 1.49351,
+      "R2": 0.14376,
+      "PoissonDev": 0.97303,
+      "capture@1%": 0.264,
+      "capture@5%": 0.50784,
+      "capture@10%": 0.62834,
+      "capture@20%": 0.74944
+    }
+  ]
+}
