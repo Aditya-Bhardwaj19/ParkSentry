@@ -1,8 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import MapView from './MapView.jsx';
 import { Icon } from './icons.jsx';
 import { getBlocks, getStations, getHotspots, getStationGeo, getRoute } from '../api.js';
 import { useT } from '../i18n/index.jsx';
+
+const escapeHtml = (s) =>
+  String(s).replace(
+    /[&<>"']/g,
+    (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])
+  );
 
 export default function PriorityMap() {
   const { t, tBlock } = useT();
@@ -15,13 +21,10 @@ export default function PriorityMap() {
   const [cells, setCells] = useState([]);
   const [err, setErr] = useState(null);
 
-  // --- station assignment + routing ---
+  // Station assignment + routing. The controls live INSIDE each dot's popup;
+  // the chosen route is drawn on the map.
   const [stationGeo, setStationGeo] = useState([]); // [{station, lat, lon, cells}]
-  const [selCell, setSelCell] = useState(null); // selected cell id
-  const [assignTo, setAssignTo] = useState(''); // chosen station name
   const [route, setRoute] = useState(null); // {path, from, distance, duration}
-  const [routing, setRouting] = useState(false);
-  const [routeErr, setRouteErr] = useState(null);
 
   useEffect(() => {
     getBlocks()
@@ -33,63 +36,6 @@ export default function PriorityMap() {
     getStations().then(setStations).catch(() => {});
     getStationGeo().then((d) => setStationGeo(d.stations)).catch(() => {});
   }, []);
-
-  const stationMap = useMemo(() => {
-    const m = {};
-    stationGeo.forEach((s) => { m[s.station] = s; });
-    return m;
-  }, [stationGeo]);
-
-  const selectedCell = useMemo(
-    () => cells.find((c) => String(c.cell) === String(selCell)) || null,
-    [cells, selCell]
-  );
-
-  // A dot was clicked: select its cell, default the assignment to its station.
-  const onSelect = useCallback(
-    (cellId) => {
-      const c = cells.find((x) => String(x.cell) === String(cellId));
-      if (!c) return;
-      setSelCell(c.cell);
-      setAssignTo(c.dom_police_station || '');
-      setRoute(null);
-      setRouteErr(null);
-    },
-    [cells]
-  );
-
-  const showRoute = () => {
-    const c = selectedCell;
-    const from = stationMap[assignTo];
-    if (!c || !from) return;
-    setRouting(true);
-    setRouteErr(null);
-    getRoute({ lat: from.lat, lon: from.lon }, { lat: c.lat, lon: c.lon })
-      .then((r) => {
-        if (!r.path || !r.path.length) throw new Error('no path');
-        setRoute({
-          path: r.path,
-          from: { lat: from.lat, lon: from.lon, label: assignTo },
-          distance: r.distance,
-          duration: r.duration,
-        });
-      })
-      .catch(() => setRouteErr(t('map.routeErr')))
-      .finally(() => setRouting(false));
-  };
-
-  const clearSel = () => {
-    setSelCell(null);
-    setRoute(null);
-    setRouteErr(null);
-  };
-
-  // Drop the selection/route if the selected cell leaves the filtered set.
-  useEffect(() => {
-    if (selCell && !cells.some((c) => String(c.cell) === String(selCell))) {
-      clearSel();
-    }
-  }, [cells, selCell]);
 
   useEffect(() => {
     if (selBlocks === null) return;
@@ -104,19 +50,96 @@ export default function PriorityMap() {
       .catch((e) => setErr(e.message));
   }, [topN, selBlocks, selStations, blocks]);
 
+  const stationMap = useMemo(() => {
+    const m = {};
+    stationGeo.forEach((s) => { m[s.station] = s; });
+    return m;
+  }, [stationGeo]);
+
+  // Live refs so the (once-attached) popup click handler always sees fresh data.
+  const cellsRef = useRef([]);
+  const stationMapRef = useRef({});
+  useEffect(() => { cellsRef.current = cells; }, [cells]);
+  useEffect(() => { stationMapRef.current = stationMap; }, [stationMap]);
+
+  // Compute + draw the road route for a cell, reading the chosen station from
+  // that cell's popup <select>, and writing the result back into the popup.
+  const doRoute = (cellId) => {
+    const cell = cellsRef.current.find((x) => String(x.cell) === String(cellId));
+    const sel = document.getElementById('psA-' + cellId);
+    const station = (sel && sel.value) || (cell && cell.dom_police_station);
+    const from = stationMapRef.current[station];
+    const out = document.getElementById('psR-' + cellId);
+    if (!cell || !from) {
+      if (out) out.textContent = t('map.routeErr');
+      return;
+    }
+    if (out) out.textContent = t('map.routing');
+    getRoute({ lat: from.lat, lon: from.lon }, { lat: cell.lat, lon: cell.lon })
+      .then((r) => {
+        if (!r.path || !r.path.length) throw new Error('no path');
+        setRoute({
+          path: r.path,
+          from: { lat: from.lat, lon: from.lon, label: station },
+          distance: r.distance,
+          duration: r.duration,
+        });
+        const el = document.getElementById('psR-' + cellId);
+        if (el) {
+          el.textContent = t('map.routeInfo', {
+            km: (r.distance / 1000).toFixed(1),
+            min: Math.round(r.duration / 60),
+          });
+        }
+      })
+      .catch(() => {
+        const el = document.getElementById('psR-' + cellId);
+        if (el) el.textContent = t('map.routeErr');
+      });
+  };
+  const doRouteRef = useRef(doRoute);
+  doRouteRef.current = doRoute;
+
+  // One delegated listener catches "Show route" clicks in any popup, regardless
+  // of how the Mappls SDK renders the popup DOM (robust vs inline handlers).
+  useEffect(() => {
+    const handler = (e) => {
+      const btn = e.target && e.target.closest && e.target.closest('[data-psroute]');
+      if (btn) {
+        e.preventDefault();
+        doRouteRef.current(btn.getAttribute('data-psroute'));
+      }
+    };
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, []);
+
+  const stationOptions = (selected) =>
+    stationGeo
+      .map((s) => {
+        const v = escapeHtml(s.station);
+        return `<option value="${v}"${s.station === selected ? ' selected' : ''}>${v}</option>`;
+      })
+      .join('');
+
   const points = useMemo(
     () =>
-      cells.map((c) => ({
-        id: c.cell,
-        lat: c.lat,
-        lon: c.lon,
-        epi: c.EPI,
-        popup:
+      cells.map((c) => {
+        const info =
           `<b>${t('map.popup.rank', { rank: c.rank })}</b> &nbsp;EPI ${c.EPI}<br/>` +
-          `${c.dom_police_station} — ${c.dom_junction}<br/>` +
-          `${t('map.popup.perDay', { n: (c.pred_daily_viol || 0).toFixed(1) })} · ${tBlock(c.peak_block_label)}`,
-      })),
-    [cells, t, tBlock]
+          `${escapeHtml(c.dom_police_station || '')} — ${escapeHtml(c.dom_junction || '')}<br/>` +
+          `${t('map.popup.perDay', { n: (c.pred_daily_viol || 0).toFixed(1) })} · ${tBlock(c.peak_block_label)}`;
+        const assign = stationGeo.length
+          ? '<div class="ps-assign">' +
+            `<label>${escapeHtml(t('map.assignTo'))}</label>` +
+            `<select id="psA-${c.cell}" data-psassign="${c.cell}">${stationOptions(c.dom_police_station)}</select>` +
+            `<button class="ps-route-btn" data-psroute="${c.cell}">${escapeHtml(t('map.showRoute'))}</button>` +
+            `<div class="ps-route-out" id="psR-${c.cell}"></div>` +
+            '</div>'
+          : '';
+        return { id: c.cell, lat: c.lat, lon: c.lon, epi: c.EPI, popup: info + assign };
+      }),
+    [cells, stationGeo, t, tBlock]
   );
 
   const visibleStations = useMemo(
@@ -140,59 +163,6 @@ export default function PriorityMap() {
       {err && <div className="error-banner">{err}</div>}
       <div className="map-layout">
         <aside className="panel controls">
-          {selectedCell && (
-            <div className="control assign-card">
-              <div className="control-title">
-                {t('map.assignTitle')}
-                <button className="link-btn" onClick={clearSel} title={t('map.clearRoute')}>
-                  ✕
-                </button>
-              </div>
-              <div className="assign-cell">
-                <b>{t('map.popup.rank', { rank: selectedCell.rank })}</b> · EPI{' '}
-                {selectedCell.EPI}
-                <div className="muted">{selectedCell.dom_junction}</div>
-              </div>
-              <label className="assign-label">{t('map.assignTo')}</label>
-              <select
-                className="assign-select"
-                value={assignTo}
-                onChange={(e) => {
-                  setAssignTo(e.target.value);
-                  setRoute(null);
-                }}
-              >
-                {stationGeo.map((s) => (
-                  <option key={s.station} value={s.station}>
-                    {s.station}
-                  </option>
-                ))}
-              </select>
-              <button
-                className="primary-btn route-btn"
-                onClick={showRoute}
-                disabled={routing || !assignTo}
-              >
-                <Icon name="pin" size={14} />{' '}
-                {routing ? t('map.routing') : t('map.showRoute')}
-              </button>
-              {route && (
-                <div className="route-info">
-                  <span>
-                    {t('map.routeInfo', {
-                      km: (route.distance / 1000).toFixed(1),
-                      min: Math.round(route.duration / 60),
-                    })}
-                  </span>
-                  <button className="link-btn" onClick={() => setRoute(null)}>
-                    {t('map.clearRoute')}
-                  </button>
-                </div>
-              )}
-              {routeErr && <div className="route-err">{routeErr}</div>}
-            </div>
-          )}
-
           <div className="control">
             <div className="control-title">
               {t('map.topN')} <span className="val">{topN}</span>
@@ -259,6 +229,23 @@ export default function PriorityMap() {
             </div>
           </div>
 
+          {route && (
+            <div className="control assign-card">
+              <div className="control-title">{t('map.assignTitle')}</div>
+              <div className="route-info">
+                <span>
+                  {t('map.routeInfo', {
+                    km: (route.distance / 1000).toFixed(1),
+                    min: Math.round(route.duration / 60),
+                  })}
+                </span>
+                <button className="link-btn" onClick={() => setRoute(null)}>
+                  {t('map.clearRoute')}
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="control-meta" style={{ marginTop: 4 }}>
             <span>
               <Icon name="pin" size={12} /> {t('map.cellsShown', { count: cells.length })}
@@ -267,7 +254,7 @@ export default function PriorityMap() {
         </aside>
 
         <div className="map-wrap">
-          <MapView points={points} height={560} onSelect={onSelect} route={route} />
+          <MapView points={points} height={560} route={route} />
         </div>
       </div>
     </div>

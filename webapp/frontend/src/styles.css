@@ -624,6 +624,58 @@ select[multiple] option {
 .map-popup-card b {
   color: var(--accent);
 }
+/* Assign + route controls embedded in the dot popup */
+.map-popup-card .ps-assign {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-strong);
+  min-width: 190px;
+}
+.map-popup-card .ps-assign label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-3);
+  margin-bottom: 4px;
+}
+.map-popup-card .ps-assign select {
+  width: 100%;
+  margin-bottom: 6px;
+  padding: 5px 6px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--surface-3);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+}
+.map-popup-card .ps-assign select option {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.map-popup-card .ps-route-btn {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  color: #06210f;
+  background: var(--brand-grad);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.map-popup-card .ps-route-btn:hover {
+  filter: brightness(1.07);
+}
+.map-popup-card .ps-route-out {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  min-height: 1px;
+}
 
 /* EPI legend overlay */
 .epi-legend {
