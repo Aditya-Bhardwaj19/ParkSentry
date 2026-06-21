@@ -5,7 +5,6 @@
     "dockerfilePath": "Dockerfile"
   },
   "deploy": {
-    "startCommand": "cd /app/webapp && npm start",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 5
   }
