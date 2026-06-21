@@ -42,4 +42,9 @@ export const saveAssignment = (cell, station) =>
     if (!r.ok) throw new Error('save failed');
     return r.json();
   });
+export const resetAssignments = () =>
+  fetch('/api/assignments', { method: 'DELETE' }).then((r) => {
+    if (!r.ok) throw new Error('reset failed');
+    return r.json();
+  });
 export const assignmentsExportUrl = '/api/assignments/export';

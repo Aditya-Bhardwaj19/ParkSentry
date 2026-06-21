@@ -65,6 +65,8 @@ export const STRINGS = {
     'map.assignmentsTitle': 'Assignments',
     'map.assignmentsCount': '{count} saved',
     'map.exportCsv': 'Export CSV',
+    'map.reset': 'Reset all',
+    'map.resetConfirm': 'Clear all saved station assignments?',
 
     'mapview.legendTitle': 'Enforcement Priority Index',
     'mapview.low': 'Low',
@@ -179,6 +181,8 @@ export const STRINGS = {
     'map.assignmentsTitle': 'असाइनमेंट',
     'map.assignmentsCount': '{count} सहेजे गए',
     'map.exportCsv': 'CSV निर्यात करें',
+    'map.reset': 'सभी रीसेट करें',
+    'map.resetConfirm': 'सभी सहेजे गए स्टेशन असाइनमेंट हटाएँ?',
 
     'mapview.legendTitle': 'प्रवर्तन प्राथमिकता सूचकांक',
     'mapview.low': 'कम',
@@ -293,6 +297,8 @@ export const STRINGS = {
     'map.assignmentsTitle': 'ನಿಯೋಜನೆಗಳು',
     'map.assignmentsCount': '{count} ಉಳಿಸಲಾಗಿದೆ',
     'map.exportCsv': 'CSV ರಫ್ತು',
+    'map.reset': 'ಎಲ್ಲವನ್ನೂ ಮರುಹೊಂದಿಸಿ',
+    'map.resetConfirm': 'ಉಳಿಸಿದ ಎಲ್ಲಾ ಠಾಣೆ ನಿಯೋಜನೆಗಳನ್ನು ತೆರವುಗೊಳಿಸುವುದೇ?',
 
     'mapview.legendTitle': 'ಜಾರಿ ಆದ್ಯತಾ ಸೂಚ್ಯಂಕ',
     'mapview.low': 'ಕಡಿಮೆ',

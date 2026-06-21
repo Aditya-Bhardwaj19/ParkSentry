@@ -9,6 +9,7 @@ import {
   getRoute,
   getAssignments,
   saveAssignment,
+  resetAssignments,
   assignmentsExportUrl,
 } from '../api.js';
 import { useT } from '../i18n/index.jsx';
@@ -129,6 +130,17 @@ export default function PriorityMap() {
   };
   const onAssignRef = useRef(onAssign);
   onAssignRef.current = onAssign;
+
+  // Clear ALL saved assignments (with a confirm).
+  const doReset = () => {
+    if (!window.confirm(t('map.resetConfirm'))) return;
+    resetAssignments()
+      .then(() => {
+        setAssignments({});
+        setRoute(null);
+      })
+      .catch(() => {});
+  };
 
   // Delegated listeners catch "Show route" clicks and dropdown changes in any
   // popup, regardless of how the Mappls SDK renders the popup DOM.
@@ -294,9 +306,14 @@ export default function PriorityMap() {
                 <span>
                   {t('map.assignmentsCount', { count: Object.keys(assignments).length })}
                 </span>
-                <a className="link-btn" href={assignmentsExportUrl} download>
-                  {t('map.exportCsv')}
-                </a>
+                <span className="assign-actions">
+                  <a className="link-btn" href={assignmentsExportUrl} download>
+                    {t('map.exportCsv')}
+                  </a>
+                  <button className="link-btn danger" onClick={doReset}>
+                    {t('map.reset')}
+                  </button>
+                </span>
               </div>
             </div>
           )}

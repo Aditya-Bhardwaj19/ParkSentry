@@ -197,6 +197,15 @@ def set_assignment(payload: dict = Body(...)):
     return {"cell": cell, "station": d.get(cell), "count": len(d)}
 
 
+@app.delete("/api/assignments")
+def reset_assignments():
+    """Clear ALL saved assignments."""
+    with _assign_lock:
+        _cache["assign"] = {}
+        _save_assignments(_cache["assign"])
+    return {"count": 0}
+
+
 @app.get("/api/assignments/export")
 def export_assignments():
     """Download the assignments as a CSV (joined with cell rank/EPI/junction)."""
