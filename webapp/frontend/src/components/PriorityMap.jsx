@@ -21,7 +21,7 @@ const escapeHtml = (s) =>
   );
 
 export default function PriorityMap() {
-  const { t, tBlock } = useT();
+  const { t, tBlock, tStation } = useT();
   const [blocks, setBlocks] = useState({}); // {idx: label}
   const [stations, setStations] = useState([]);
   const [selBlocks, setSelBlocks] = useState(null); // null = all
@@ -92,7 +92,7 @@ export default function PriorityMap() {
         if (!r.path || !r.path.length) throw new Error('no path');
         setRoute({
           path: r.path,
-          from: { lat: from.lat, lon: from.lon, label: station },
+          from: { lat: from.lat, lon: from.lon, label: tStation(station) },
           distance: r.distance,
           duration: r.duration,
         });
@@ -167,8 +167,9 @@ export default function PriorityMap() {
   const stationOptions = (selected) =>
     stationGeo
       .map((s) => {
-        const v = escapeHtml(s.station);
-        return `<option value="${v}"${s.station === selected ? ' selected' : ''}>${v}</option>`;
+        const v = escapeHtml(s.station); // raw value -> drives assignment/route
+        const label = escapeHtml(tStation(s.station)); // localized display only
+        return `<option value="${v}"${s.station === selected ? ' selected' : ''}>${label}</option>`;
       })
       .join('');
 
@@ -177,7 +178,7 @@ export default function PriorityMap() {
       cells.map((c) => {
         const info =
           `<b>${t('map.popup.rank', { rank: c.rank })}</b> &nbsp;EPI ${c.EPI}<br/>` +
-          `${escapeHtml(c.dom_police_station || '')} — ${escapeHtml(c.dom_junction || '')}<br/>` +
+          `${escapeHtml(tStation(c.dom_police_station || ''))} — ${escapeHtml(c.dom_junction || '')}<br/>` +
           `${t('map.popup.perDay', { n: (c.pred_daily_viol || 0).toFixed(1) })} · ${tBlock(c.peak_block_label)}`;
         const assigned = assignments[c.cell]; // saved choice, if any
         const dflt = assigned || c.dom_police_station;
@@ -192,16 +193,19 @@ export default function PriorityMap() {
           : '';
         return { id: c.cell, lat: c.lat, lon: c.lon, epi: c.EPI, popup: info + assign };
       }),
-    [cells, stationGeo, assignments, t, tBlock]
+    [cells, stationGeo, assignments, t, tBlock, tStation]
   );
 
-  const visibleStations = useMemo(
-    () =>
-      stations.filter((s) =>
-        s.toLowerCase().includes(stationQuery.trim().toLowerCase())
-      ),
-    [stations, stationQuery]
-  );
+  const visibleStations = useMemo(() => {
+    const q = stationQuery.trim().toLowerCase();
+    if (!q) return stations;
+    // Match the raw English name OR its localized form, so the filter works
+    // whichever script the user types in.
+    return stations.filter(
+      (s) =>
+        s.toLowerCase().includes(q) || tStation(s).toLowerCase().includes(q)
+    );
+  }, [stations, stationQuery, tStation]);
 
   const toggleBlock = (label) => {
     setSelBlocks((prev) => {
@@ -268,7 +272,7 @@ export default function PriorityMap() {
             >
               {visibleStations.map((s) => (
                 <option key={s} value={s}>
-                  {s}
+                  {tStation(s)}
                 </option>
               ))}
             </select>

@@ -29,7 +29,7 @@ function toCsv(rows) {
 }
 
 export default function PriorityTable() {
-  const { t, tBlock } = useT();
+  const { t, tBlock, tStation } = useT();
   const [cells, setCells] = useState([]);
   const [zones, setZones] = useState([]);
   const [showZones, setShowZones] = useState(false);
@@ -83,7 +83,13 @@ export default function PriorityTable() {
                 </td>
                 {COLS.slice(1).map(([k]) => (
                   <td key={k}>
-                    {fmt(k === 'peak_block_label' ? tBlock(c[k]) : c[k])}
+                    {fmt(
+                      k === 'peak_block_label'
+                        ? tBlock(c[k])
+                        : k === 'dom_police_station'
+                        ? tStation(c[k])
+                        : c[k]
+                    )}
                   </td>
                 ))}
               </tr>

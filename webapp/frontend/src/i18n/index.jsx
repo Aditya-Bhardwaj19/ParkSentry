@@ -10,6 +10,7 @@ import {
   useState,
 } from 'react';
 import { LANGUAGES, DEFAULT_LANG, STRINGS, BLOCKS } from './translations.js';
+import { STATION_NAMES } from './stationNames.js';
 
 const I18nContext = createContext(null);
 const STORAGE_KEY = 'ps_lang';
@@ -52,7 +53,14 @@ export function I18nProvider({ children }) {
       interpolate(dict[key] ?? STRINGS[DEFAULT_LANG][key] ?? key, vars);
     // Translate a backend time-block label; falls back to the label itself.
     const tBlock = (label) => (BLOCKS[lang] && BLOCKS[lang][label]) || label;
-    return { lang, setLang, languages: LANGUAGES, t, tBlock };
+    // Translate a raw police-station name (data value); English / unmapped
+    // names fall back to the raw name unchanged.
+    const tStation = (name) => {
+      if (!name || lang === DEFAULT_LANG) return name;
+      const e = STATION_NAMES[name];
+      return (e && e[lang]) || name;
+    };
+    return { lang, setLang, languages: LANGUAGES, t, tBlock, tStation };
   }, [lang, setLang]);
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;

@@ -1,0 +1,67 @@
+// Localized police-station names.
+//
+// Keys are the *raw* English values that come from the dataset
+// (`dom_police_station`). Each entry gives the Hindi (hi) and Kannada (kn)
+// form -- Kannada uses the official Bengaluru locality name; Hindi is a
+// faithful transliteration. English renders the raw key as-is, and any name
+// missing from this map falls back to the raw key (see `tStation` in
+// i18n/index.jsx). The raw English value always stays the data/`value`, so
+// filtering, routing and saved assignments are unaffected -- only the *label*
+// shown to the user is translated.
+export const STATION_NAMES = {
+  'Adugodi': { hi: 'आदुगोडी', kn: 'ಆದುಗೋಡಿ' },
+  'Ashok Nagar': { hi: 'अशोक नगर', kn: 'ಅಶೋಕ್ ನಗರ' },
+  'Banashankari': { hi: 'बनशंकरी', kn: 'ಬನಶಂಕರಿ' },
+  'Banaswadi': { hi: 'बनसवाड़ी', kn: 'ಬನಸವಾಡಿ' },
+  'Basavanagudi': { hi: 'बसवनगुड़ी', kn: 'ಬಸವನಗುಡಿ' },
+  'Bellandur': { hi: 'बेल्लंदूर', kn: 'ಬೆಳ್ಳಂದೂರು' },
+  'Byatarayanapura': { hi: 'ब्यातरायनपुर', kn: 'ಬ್ಯಾಟರಾಯನಪುರ' },
+  'Chamarajpet': { hi: 'चामराजपेट', kn: 'ಚಾಮರಾಜಪೇಟೆ' },
+  'Chikkabanavara': { hi: 'चिक्कबनवारा', kn: 'ಚಿಕ್ಕಬನವಾರ' },
+  'Chikkajala': { hi: 'चिक्कजाला', kn: 'ಚಿಕ್ಕಜಾಲ' },
+  'City Market': { hi: 'सिटी मार्केट', kn: 'ಸಿಟಿ ಮಾರ್ಕೆಟ್' },
+  'Cubbon Park': { hi: 'कब्बन पार्क', kn: 'ಕಬ್ಬನ್ ಪಾರ್ಕ್' },
+  'Devanahalli Airport': { hi: 'देवनहल्ली एयरपोर्ट', kn: 'ದೇವನಹಳ್ಳಿ ವಿಮಾನ ನಿಲ್ದಾಣ' },
+  'Electronic City': { hi: 'इलेक्ट्रॉनिक सिटी', kn: 'ಎಲೆಕ್ಟ್ರಾನಿಕ್ ಸಿಟಿ' },
+  'HAL Old Airport': { hi: 'एचएएल ओल्ड एयरपोर्ट', kn: 'ಎಚ್‌ಎಎಲ್ ಹಳೆಯ ವಿಮಾನ ನಿಲ್ದಾಣ' },
+  'HSR Layout': { hi: 'एचएसआर लेआउट', kn: 'ಎಚ್‌ಎಸ್‌ಆರ್ ಲೇಔಟ್' },
+  'Halasur': { hi: 'हलसूर', kn: 'ಹಲಸೂರು' },
+  'Halasuru Gate': { hi: 'हलसूर गेट', kn: 'ಹಲಸೂರು ಗೇಟ್' },
+  'Hebbala': { hi: 'हेब्बाल', kn: 'ಹೆಬ್ಬಾಳ' },
+  'Hennuru': { hi: 'हेन्नूर', kn: 'ಹೆಣ್ಣೂರು' },
+  'High ground': { hi: 'हाई ग्राउंड', kn: 'ಹೈ ಗ್ರೌಂಡ್ಸ್' },
+  'Hulimavu': { hi: 'हुलिमावु', kn: 'ಹುಳಿಮಾವು' },
+  'J.P. Nagar': { hi: 'जे.पी. नगर', kn: 'ಜೆ.ಪಿ. ನಗರ' },
+  'Jalahalli': { hi: 'जालहल्ली', kn: 'ಜಾಲಹಳ್ಳಿ' },
+  'Jayanagara': { hi: 'जयनगर', kn: 'ಜಯನಗರ' },
+  'Jeevanbheemanagar': { hi: 'जीवनभीमानगर', kn: 'ಜೀವನ್‌ಭೀಮಾನಗರ' },
+  'Jnanabharathi': { hi: 'ज्ञानभारती', kn: 'ಜ್ಞಾನಭಾರತಿ' },
+  'K.G. Halli': { hi: 'के.जी. हल्ली', kn: 'ಕೆ.ಜಿ. ಹಳ್ಳಿ' },
+  'K.R. Pura': { hi: 'के.आर. पुरा', kn: 'ಕೆ.ಆರ್. ಪುರ' },
+  'K.S. Layout': { hi: 'के.एस. लेआउट', kn: 'ಕೆ.ಎಸ್. ಲೇಔಟ್' },
+  'Kamakshipalya': { hi: 'कामाक्षीपाल्या', kn: 'ಕಾಮಾಕ್ಷಿಪಾಳ್ಯ' },
+  'Kengeri': { hi: 'केंगेरी', kn: 'ಕೆಂಗೇರಿ' },
+  'Kodigehalli': { hi: 'कोडिगेहल्ली', kn: 'ಕೋಡಿಗೇಹಳ್ಳಿ' },
+  'Madiwala': { hi: 'माडीवाला', kn: 'ಮಾಡಿವಾಳ' },
+  'Magadi Road': { hi: 'मगडी रोड', kn: 'ಮಾಗಡಿ ರಸ್ತೆ' },
+  'Mahadevapura': { hi: 'महादेवपुर', kn: 'ಮಹಾದೇವಪುರ' },
+  'Malleshwaram': { hi: 'मल्लेश्वरम', kn: 'ಮಲ್ಲೇಶ್ವರಂ' },
+  'Mico Layout': { hi: 'माइको लेआउट', kn: 'ಮೈಕೋ ಲೇಔಟ್' },
+  'No Police Station': { hi: 'कोई पुलिस थाना नहीं', kn: 'ಪೊಲೀಸ್ ಠಾಣೆ ಇಲ್ಲ' },
+  'Peenya': { hi: 'पीन्या', kn: 'ಪೀಣ್ಯ' },
+  'Pulikeshinagar(F.Town)': { hi: 'पुलिकेशीनगर(एफ.टाउन)', kn: 'ಪುಲಿಕೇಶಿನಗರ(ಎಫ್.ಟೌನ್)' },
+  'R.T. Nagar': { hi: 'आर.टी. नगर', kn: 'ಆರ್.ಟಿ. ನಗರ' },
+  'Rajajinagar': { hi: 'राजाजीनगर', kn: 'ರಾಜಾಜಿನಗರ' },
+  'Sadashivanagar': { hi: 'सदाशिवनगर', kn: 'ಸದಾಶಿವನಗರ' },
+  'Sheshadripuram': { hi: 'शेषाद्रिपुरम', kn: 'ಶೇಷಾದ್ರಿಪುರಂ' },
+  'Shivajinagar': { hi: 'शिवाजीनगर', kn: 'ಶಿವಾಜಿನಗರ' },
+  'Thalagattapura': { hi: 'तलगट्टपुर', kn: 'ತಲಗಟ್ಟಪುರ' },
+  'UNKNOWN': { hi: 'अज्ञात', kn: 'ಅಜ್ಞಾತ' },
+  'Upparpet': { hi: 'उप्पारपेट', kn: 'ಉಪ್ಪಾರಪೇಟೆ' },
+  'V.V.Puram (C.Pet)': { hi: 'वी.वी.पुरम (सी.पेट)', kn: 'ವಿ.ವಿ.ಪುರಂ (ಸಿ.ಪೇಟೆ)' },
+  'Vijayanagara': { hi: 'विजयनगर', kn: 'ವಿಜಯನಗರ' },
+  'Whitefield': { hi: 'व्हाइटफील्ड', kn: 'ವೈಟ್‌ಫೀಲ್ಡ್' },
+  'Wilson Garden': { hi: 'विल्सन गार्डन', kn: 'ವಿಲ್ಸನ್ ಗಾರ್ಡನ್' },
+  'Yelahanka': { hi: 'येलहंका', kn: 'ಯಲಹಂಕ' },
+  'Yeshwanthpura': { hi: 'यश्वंतपुर', kn: 'ಯಶವಂತಪುರ' },
+};

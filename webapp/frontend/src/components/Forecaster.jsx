@@ -5,7 +5,7 @@ import { getBlocks, getForecast } from '../api.js';
 import { useT } from '../i18n/index.jsx';
 
 export default function Forecaster() {
-  const { t, tBlock } = useT();
+  const { t, tBlock, tStation } = useT();
   const [blocks, setBlocks] = useState({});
   const [date, setDate] = useState('2024-04-10');
   const [block, setBlock] = useState(2);
@@ -35,11 +35,11 @@ export default function Forecaster() {
       lon: c.cell_lon,
       epi: (c.pred_viol / mx) * 100,
       popup:
-        `<b>#${i + 1}</b> &nbsp;${c.police_station || ''}<br/>` +
+        `<b>#${i + 1}</b> &nbsp;${tStation(c.police_station || '')}<br/>` +
         `${t('forecast.popup.cell', { cell: c.cell })}<br/>` +
         `${t('forecast.popup.viol', { n: (c.pred_viol || 0).toFixed(2) })} · ${tBlock(result.block_label)}`,
     }));
-  }, [result, t, tBlock]);
+  }, [result, t, tBlock, tStation]);
 
   return (
     <div>
@@ -108,7 +108,7 @@ export default function Forecaster() {
                     </td>
                     <td>{(c.pred_viol || 0).toFixed(3)}</td>
                     <td className="mono">{c.cell}</td>
-                    <td>{c.police_station}</td>
+                    <td>{tStation(c.police_station)}</td>
                   </tr>
                 ))}
               </tbody>
